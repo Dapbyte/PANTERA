@@ -1,17 +1,18 @@
 &lt;div align=&quot;center&quot;&gt;
   &lt;img src=&quot;https://www.google.com/search?q=https://i.ibb.co/rGXgMkw4/pantera.png&quot; alt=&quot;Logo PANTERA&quot; width=&quot;180&quot; /&gt;
   &lt;h1&gt;PANTERA&lt;/h1&gt;
-  &lt;p&gt;&lt;strong&gt;Aplikasi Pemantauan Arsip, Termin, dan Risiko&lt;/strong&gt;&lt;br /&gt;PT. Djasipa Mitra Perkasa&lt;/p&gt;
-
-  &lt;p&gt;
-    &lt;img src=&quot;https://www.google.com/search?q=https://img.shields.io/badge/Status-Development-blue%3Fstyle%3Dflat-square&quot; alt=&quot;Project status: Development&quot; /&gt;
-    &lt;img src=&quot;https://www.google.com/search?q=https://img.shields.io/badge/Architecture-Monorepo-6f42c1%3Fstyle%3Dflat-square&quot; alt=&quot;Monorepo architecture&quot; /&gt;
-    &lt;img src=&quot;https://img.shields.io/badge/Backend-Laravel%2013-FF2D20?style=flat-square&amp;logo=laravel&amp;logoColor=white&quot; alt=&quot;Laravel 13 backend&quot; /&gt;
-    &lt;img src=&quot;https://img.shields.io/badge/Frontend-React%2019%20%2B%20TS-61DAFB?style=flat-square&amp;logo=react&amp;logoColor=black&quot; alt=&quot;React and TypeScript frontend&quot; /&gt;
-    &lt;img src=&quot;https://img.shields.io/badge/Database-MySQL%208.4-4479A1?style=flat-square&amp;logo=mysql&amp;logoColor=white&quot; alt=&quot;MySQL 8.4 database&quot; /&gt;
-    &lt;img src=&quot;https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&amp;logo=docker&amp;logoColor=white&quot; alt=&quot;Docker Compose&quot; /&gt;
-  &lt;/p&gt;
+  &lt;p&gt;&lt;strong&gt;Aplikasi Pemantauan Arsip, Termin, dan Risiko&lt;/strong&gt;&lt;/p&gt;
+  &lt;p&gt;PT. Djasipa Mitra Perkasa&lt;/p&gt;
 &lt;/div&gt;
+
+&lt;p align=&quot;center&quot;&gt;
+  &lt;img src=&quot;https://www.google.com/search?q=https://img.shields.io/badge/Status-Development-blue%3Fstyle%3Dflat-square&quot; alt=&quot;Project status: Development&quot; /&gt;
+  &lt;img src=&quot;https://www.google.com/search?q=https://img.shields.io/badge/Architecture-Monorepo-6f42c1%3Fstyle%3Dflat-square&quot; alt=&quot;Monorepo architecture&quot; /&gt;
+  &lt;img src=&quot;https://img.shields.io/badge/Backend-Laravel%2013-FF2D20?style=flat-square&amp;logo=laravel&amp;logoColor=white&quot; alt=&quot;Laravel 13 backend&quot; /&gt;
+  &lt;img src=&quot;https://img.shields.io/badge/Frontend-React%2019%20%2B%20TS-61DAFB?style=flat-square&amp;logo=react&amp;logoColor=black&quot; alt=&quot;React and TypeScript frontend&quot; /&gt;
+  &lt;img src=&quot;https://img.shields.io/badge/Database-MySQL%208.4-4479A1?style=flat-square&amp;logo=mysql&amp;logoColor=white&quot; alt=&quot;MySQL 8.4 database&quot; /&gt;
+  &lt;img src=&quot;https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&amp;logo=docker&amp;logoColor=white&quot; alt=&quot;Docker Compose&quot; /&gt;
+&lt;/p&gt;
 
 ---
 
@@ -168,7 +169,7 @@ Gunakan cara ini jika laptop tidak mendukung Docker Desktop.
 ### 1. Clone & Siapkan Backend
 
 ```bash
-git clone https://github.com/Dapbyte/PANTERA
+git clone <REPOSITORY_URL>
 cd PANTERA/backend
 composer install
 ```
@@ -360,5 +361,6 @@ Klik gejala error yang muncul di bawah ini untuk melihat penyebab dan solusinya.
 ---
 
 &lt;div align=&quot;center&quot;&gt;
-  &lt;p&gt;&lt;strong&gt;PANTERA — Pemantauan Arsip, Termin, dan Risiko&lt;/strong&gt;&lt;br /&gt;PT. Djasipa Mitra Perkasa&lt;/p&gt;
+  &lt;p&gt;&lt;strong&gt;PANTERA — Pemantauan Arsip, Termin, dan Risiko&lt;/strong&gt;&lt;/p&gt;
+  &lt;p&gt;PT. Djasipa Mitra Perkasa&lt;/p&gt;
 &lt;/div&gt;
