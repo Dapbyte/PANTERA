@@ -1,18 +1,18 @@
-&lt;div align=&quot;center&quot;&gt;
-  &lt;img src=&quot;https://www.google.com/search?q=https://i.ibb.co/rGXgMkw4/pantera.png&quot; alt=&quot;Logo PANTERA&quot; width=&quot;180&quot; /&gt;
-  &lt;h1&gt;PANTERA&lt;/h1&gt;
-  &lt;p&gt;&lt;strong&gt;Aplikasi Pemantauan Arsip, Termin, dan Risiko&lt;/strong&gt;&lt;/p&gt;
-  &lt;p&gt;PT. Djasipa Mitra Perkasa&lt;/p&gt;
-&lt;/div&gt;
+<div align="center">
+  <img src="https://i.ibb.co/rGXgMkw4/pantera.png" alt="Logo PANTERA" width="180" />
+  <h1>PANTERA</h1>
+  <p><strong>Aplikasi Pemantauan Arsip, Termin, dan Risiko</strong></p>
+  <p>PT. Djasipa Mitra Perkasa</p>
+</div>
 
-&lt;p align=&quot;center&quot;&gt;
-  &lt;img src=&quot;https://www.google.com/search?q=https://img.shields.io/badge/Status-Development-blue%3Fstyle%3Dflat-square&quot; alt=&quot;Project status: Development&quot; /&gt;
-  &lt;img src=&quot;https://www.google.com/search?q=https://img.shields.io/badge/Architecture-Monorepo-6f42c1%3Fstyle%3Dflat-square&quot; alt=&quot;Monorepo architecture&quot; /&gt;
-  &lt;img src=&quot;https://img.shields.io/badge/Backend-Laravel%2013-FF2D20?style=flat-square&amp;logo=laravel&amp;logoColor=white&quot; alt=&quot;Laravel 13 backend&quot; /&gt;
-  &lt;img src=&quot;https://img.shields.io/badge/Frontend-React%2019%20%2B%20TS-61DAFB?style=flat-square&amp;logo=react&amp;logoColor=black&quot; alt=&quot;React and TypeScript frontend&quot; /&gt;
-  &lt;img src=&quot;https://img.shields.io/badge/Database-MySQL%208.4-4479A1?style=flat-square&amp;logo=mysql&amp;logoColor=white&quot; alt=&quot;MySQL 8.4 database&quot; /&gt;
-  &lt;img src=&quot;https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&amp;logo=docker&amp;logoColor=white&quot; alt=&quot;Docker Compose&quot; /&gt;
-&lt;/p&gt;
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Development-blue?style=flat-square" alt="Project status: Development" />
+  <img src="https://img.shields.io/badge/Architecture-Monorepo-6f42c1?style=flat-square" alt="Monorepo architecture" />
+  <img src="https://img.shields.io/badge/Backend-Laravel%2013-FF2D20?style=flat-square&logo=laravel&logoColor=white" alt="Laravel 13 backend" />
+  <img src="https://img.shields.io/badge/Frontend-React%2019%20%2B%20TS-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React and TypeScript frontend" />
+  <img src="https://img.shields.io/badge/Database-MySQL%208.4-4479A1?style=flat-square&logo=mysql&logoColor=white" alt="MySQL 8.4 database" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker Compose" />
+</p>
 
 ---
 
@@ -66,8 +66,8 @@ Pilih jalur setup yang ingin digunakan:
 - **Jalur Docker (Direkomendasikan untuk tim):** Kamu **tidak perlu** menginstal PHP, Composer, MySQL, atau Node.js secara manual. Cukup instal **Git** dan **Docker Desktop**.
 - **Jalur Manual (Tanpa Docker):** Instal **Git**, **PHP >= 8.3**, **Composer 2**, **Node.js >= 22**, dan **MySQL 8.x**.
 
-&lt;details&gt;
-&lt;summary&gt;&lt;strong&gt;1. Panduan Install Git &amp; Docker Desktop (Untuk Jalur Docker)&lt;/strong&gt;&lt;/summary&gt;
+<details>
+<summary><strong>1. Panduan Install Git & Docker Desktop (Untuk Jalur Docker)</strong></summary>
 
 1. **Install Git:**
    - **Windows:** Unduh dan instal dari [git-scm.com/downloads/win](https://git-scm.com/downloads/win) (atau via terminal: `winget install Git.Git`).
@@ -84,10 +84,10 @@ Pilih jalur setup yang ingin digunakan:
    docker compose version
    ```
 
-&lt;/details&gt;
+</details>
 
-&lt;details&gt;
-&lt;summary&gt;&lt;strong&gt;2. Panduan Install Runtime Manual (Hanya Jika Tidak Pakai Docker)&lt;/strong&gt;&lt;/summary&gt;
+<details>
+<summary><strong>2. Panduan Install Runtime Manual (Hanya Jika Tidak Pakai Docker)</strong></summary>
 
 1. **Git:** [git-scm.com](https://git-scm.com/downloads)
 2. **PHP `>= 8.3` & Ekstensi:** Pastikan ekstensi `pdo_mysql`, `mbstring`, `bcmath`, `zip`, `openssl`, `tokenizer`, `ctype`, dan `fileinfo` aktif. Di Windows dapat menggunakan [Laragon](https://laragon.org/) atau [Laravel Herd](https://herd.laravel.com/).
@@ -95,7 +95,7 @@ Pilih jalur setup yang ingin digunakan:
 4. **Node.js `>= 22` (LTS):** Unduh dari [nodejs.org](https://nodejs.org/).
 5. **MySQL 8.x:** Gunakan MySQL Server bawaan Laragon/XAMPP atau unduh dari [dev.mysql.com](https://dev.mysql.com/downloads/).
 
-&lt;/details&gt;
+</details>
 
 ---
 
@@ -157,7 +157,7 @@ docker compose exec backend php artisan migrate
 | Layanan | URL / Akses | Keterangan |
 | :--- | :--- | :--- |
 | **Frontend Web** | [http://localhost:5173](http://localhost:5173) | Halaman utama React + Vite |
-| **Backend API** | [http://127.0.0.1:8000/api/health](https://www.google.com/search?q=https%3A%2F%2Fwww.google.com%2Furl%3Fsa%3DE%26source%3Dgmail%26q%3Dhttp%3A%2F%2F127.0.0.1%3A8000%2Fapi%2Fhealth) | Endpoint cek kesehatan API |
+| **Backend API** | [http://127.0.0.1:8000/api/health](http://127.0.0.1:8000/api/health) | Endpoint cek kesehatan API |
 | **MySQL (via Client GUI)** | `127.0.0.1` port `3307` | DB: `pantera`, User: `pantera`, Pass: `pantera_local_password_2026` |
 
 ---
@@ -276,8 +276,8 @@ Setelah menjalankan aplikasi (baik via Docker maupun Manual), pastikan koneksi F
 
 Klik gejala error yang muncul di bawah ini untuk melihat penyebab dan solusinya.
 
-&lt;details&gt;
-&lt;summary&gt;&lt;strong&gt;1. Error: &lt;code&gt;env file .../backend/.env not found&lt;/code&gt; saat menjalankan Docker&lt;/strong&gt;&lt;/summary&gt;
+<details>
+<summary><strong>1. Error: <code>env file .../backend/.env not found</code> saat menjalankan Docker</strong></summary>
 
 - **Penyebab:** File `backend/.env` belum dibuat.
 - **Solusi:** Salin template environment terlebih dahulu:
@@ -286,10 +286,10 @@ Klik gejala error yang muncul di bawah ini untuk melihat penyebab dan solusinya.
   ```
   Lalu jalankan ulang `docker compose up -d`.
 
-&lt;/details&gt;
+</details>
 
-&lt;details&gt;
-&lt;summary&gt;&lt;strong&gt;2. Download Composer sangat lama atau gagal &lt;code&gt;curl error 28 (SSL connection timeout)&lt;/code&gt;&lt;/strong&gt;&lt;/summary&gt;
+<details>
+<summary><strong>2. Download Composer sangat lama atau gagal <code>curl error 28 (SSL connection timeout)</code></strong></summary>
 
 - **Penyebab:** Koneksi internet lambat atau timeout saat mengunduh zip paket dari `codeload.github.com` ketika `composer install` berjalan di dalam container.
 - **Solusi:**
@@ -311,10 +311,10 @@ Klik gejala error yang muncul di bawah ini untuk melihat penyebab dan solusinya.
      docker compose up -d
      ```
 
-&lt;/details&gt;
+</details>
 
-&lt;details&gt;
-&lt;summary&gt;&lt;strong&gt;3. Browser menampilkan &lt;code&gt;502 Bad Gateway&lt;/code&gt; di &lt;code&gt;localhost:5173&lt;/code&gt;&lt;/strong&gt;&lt;/summary&gt;
+<details>
+<summary><strong>3. Browser menampilkan <code>502 Bad Gateway</code> di <code>localhost:5173</code></strong></summary>
 
 - **Penyebab:** Container `frontend` sudah berjalan, tetapi container `backend` masih dalam proses `composer install` atau belum siap menerima koneksi.
 - **Solusi:**
@@ -328,10 +328,10 @@ Klik gejala error yang muncul di bawah ini untuk melihat penyebab dan solusinya.
      docker compose restart frontend
      ```
 
-&lt;/details&gt;
+</details>
 
-&lt;details&gt;
-&lt;summary&gt;&lt;strong&gt;4. API status &lt;code&gt;200 OK&lt;/code&gt; tapi frontend error &lt;code&gt;Response bukan JSON: &quot;\n&quot;&lt;/code&gt;&lt;/strong&gt;&lt;/summary&gt;
+<details>
+<summary><strong>4. API status <code>200 OK</code> tapi frontend error <code>Response bukan JSON: "\n"</code></strong></summary>
 
 - **Penyebab:** Terdapat baris kosong (`\n`) atau karakter tersembunyi (BOM) sebelum tag `<?php` pada salah satu file PHP (misalnya `backend/routes/api.php`), sehingga header HTTP `text/html` terkirim lebih dulu sebelum JSON Laravel.
 - **Solusi:**
@@ -342,10 +342,10 @@ Klik gejala error yang muncul di bawah ini untuk melihat penyebab dan solusinya.
      ```
      Hapus baris kosong di awal setiap file yang tercetak.
 
-&lt;/details&gt;
+</details>
 
-&lt;details&gt;
-&lt;summary&gt;&lt;strong&gt;5. Error &lt;code&gt;port is already allocated&lt;/code&gt; (Port 3307, 8000, atau 5173 sudah dipakai)&lt;/strong&gt;&lt;/summary&gt;
+<details>
+<summary><strong>5. Error <code>port is already allocated</code> (Port 3307, 8000, atau 5173 sudah dipakai)</strong></summary>
 
 - **Penyebab:** Ada aplikasi lain (misalnya XAMPP, Laragon, MySQL lokal, atau proyek Vite/Laravel lain) yang sedang memakai port yang sama.
 - **Solusi:** Matikan aplikasi yang bentrok, atau ubah port di file `.env` pada root folder `PANTERA/`:
@@ -356,11 +356,11 @@ Klik gejala error yang muncul di bawah ini untuk melihat penyebab dan solusinya.
   ```
   Lalu jalankan ulang `docker compose up -d`.
 
-&lt;/details&gt;
+</details>
 
 ---
 
-&lt;div align=&quot;center&quot;&gt;
-  &lt;p&gt;&lt;strong&gt;PANTERA — Pemantauan Arsip, Termin, dan Risiko&lt;/strong&gt;&lt;/p&gt;
-  &lt;p&gt;PT. Djasipa Mitra Perkasa&lt;/p&gt;
-&lt;/div&gt;
+<div align="center">
+  <p><strong>PANTERA — Pemantauan Arsip, Termin, dan Risiko</strong></p>
+  <p>PT. Djasipa Mitra Perkasa</p>
+</div>
