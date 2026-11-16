@@ -1,0 +1,66 @@
+# =====================================
+# ROOT ENVIRONMENT
+# =====================================
+/.env
+# IDE / Editor (Root)
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+/.env
+/.env.*
+!/.env.example
+# Backend
+/backend/.env
+/backend/.env.*
+
+# Frontend
+/frontend/.env
+/frontend/.env.*
+
+# Keep example files
+!/.env.example
+!/backend/.env.example
+!/frontend/.env.example
+/backend/storage/logs/*
+!/backend/storage/logs/.gitignore
+# =====================================
+# BACKEND
+# =====================================
+/backend/vendor/
+/backend/node_modules/
+/backend/bootstrap/cache/*.php
+/backend/storage/logs/*
+/backend/public/build/
+/backend/public/hot
+
+# =====================================
+# FRONTEND
+# =====================================
+/frontend/node_modules/
+/frontend/dist/
+/frontend/build/
+
+# =====================================
+# DOCKER
+# =====================================
+**/.docker-build/
+
+# =====================================
+# DATABASE DUMPS
+# =====================================
+*.sql
+*.sqlite
+*.sqlite3
+
+# =====================================
+# LOGS
+# =====================================
+*.log
+
+# =====================================
+# OPERATING SYSTEM
+# =====================================
+.DS_Store
+Thumbs.db
+Desktop.ini

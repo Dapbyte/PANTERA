@@ -1,0 +1,105 @@
+name: pantera
+
+services:
+
+  # =====================================
+  # MYSQL DATABASE
+  # =====================================
+  db:
+    image: mysql:8.4.13
+    restart: unless-stopped
+
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-pantera}
+      MYSQL_USER: ${MYSQL_USER:-pantera}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-pantera_local_password_2026}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-pantera_root_password_2026}
+
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-3307}:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test: [ "CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  # =====================================
+  # LARAVEL BACKEND API
+  # =====================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile
+
+    restart: unless-stopped
+    working_dir: /var/www/html
+
+    env_file:
+      - ./backend/.env
+
+    volumes:
+      - ./backend:/var/www/html
+      - backend_vendor:/var/www/html/vendor
+
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:${BACKEND_PORT:-8000}
+
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: ${MYSQL_DATABASE:-pantera}
+      DB_USERNAME: ${MYSQL_USER:-pantera}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-pantera_local_password_2026}
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    command: >
+      sh -c "composer install --no-interaction --prefer-dist && php -S 0.0.0.0:8000 -t public public/index.php"
+
+  # =====================================
+  # REACT + VITE FRONTEND
+  # =====================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+    restart: unless-stopped
+    working_dir: /app
+
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:5173"
+
+    environment:
+      VITE_API_BASE_URL: /api
+      API_PROXY_TARGET: http://backend:8000
+
+    depends_on:
+      - backend
+
+    command: >
+      sh -c "npm ci --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
+
+# =====================================
+# PERSISTENT VOLUMES
+# =====================================
+volumes:
+  mysql_data:
+  backend_vendor:
+  frontend_node_modules:
