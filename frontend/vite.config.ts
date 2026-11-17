@@ -7,8 +7,8 @@ export default defineConfig({
 
   server: {
     host: '0.0.0.0',
-    port: 5173,
-    strictPort: true,
+    port: Number(process.env.FRONTEND_PORT || process.env.VITE_PORT) || 5174,
+    strictPort: false,
 
     proxy: {
       '/api': {
