@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\ProgresFisik;
 use App\Models\Proyek;
 use App\Models\Termin;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ProjectService
@@ -78,9 +80,9 @@ class ProjectService
     /**
      * Mengambil katalog daftar proyek dengan filter pencarian dan ringkasan operasional.
      *
-     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     * @return Collection<int, mixed>
      */
-    public function getProjectList(?string $keyword = null, ?string $statusProyek = null): \Illuminate\Support\Collection
+    public function getProjectList(?string $keyword = null, ?string $statusProyek = null): Collection
     {
         $query = Proyek::with([
             'rab',
@@ -102,14 +104,37 @@ class ProjectService
 
         $projects = $query->latest('id_proyek')->get();
 
-        return $projects->map(function (Proyek $proyek) {
+        /** @var Collection<int, mixed> $result */
+        $result = $projects->map(function ($proyek) {
+            /** @var Proyek $proyek */
             // Posisi termin berjalan: termin terdekat yang belum cair SP2D
+            /** @var Termin|null $terminBerjalan */
             $terminBerjalan = $proyek->termin->firstWhere('status_penagihan', '!=', 'SP2D cair')
                 ?? $proyek->termin->last();
 
             // Progres fisik terakhir
+            /** @var ProgresFisik|null $progresTerakhir */
             $progresTerakhir = $proyek->progresFisik->first();
             $persentaseProgres = $progresTerakhir ? (float) $progresTerakhir->persentase_realisasi : 0.0;
+
+            $totalPagu = $proyek->rab ? (float) $proyek->rab->total_pagu : 0.0;
+            $sisaPagu = $proyek->rab ? (float) $proyek->rab->sisa_pagu : 0.0;
+            $versiRab = $proyek->rab ? (string) $proyek->rab->versi_rab : '1';
+
+            $tglMulai = $proyek->tanggal_mulai instanceof \DateTimeInterface
+                ? $proyek->tanggal_mulai->format('Y-m-d')
+                : (string) $proyek->tanggal_mulai;
+
+            $tglSelesai = $proyek->tanggal_selesai instanceof \DateTimeInterface
+                ? $proyek->tanggal_selesai->format('Y-m-d')
+                : (string) $proyek->tanggal_selesai;
+
+            $tenggatTermin = null;
+            if ($terminBerjalan) {
+                $tenggatTermin = $terminBerjalan->tenggat_waktu instanceof \DateTimeInterface
+                    ? $terminBerjalan->tenggat_waktu->format('Y-m-d')
+                    : (string) $terminBerjalan->tenggat_waktu;
+            }
 
             return [
                 'id_proyek' => $proyek->id_proyek,
@@ -117,29 +142,33 @@ class ProjectService
                 'nama_proyek' => $proyek->nama_proyek,
                 'dinas_pemberi_kerja' => $proyek->dinas_pemberi_kerja,
                 'nilai_kontrak' => (float) $proyek->nilai_kontrak,
-                'tanggal_mulai' => $proyek->tanggal_mulai?->format('Y-m-d'),
-                'tanggal_selesai' => $proyek->tanggal_selesai?->format('Y-m-d'),
+                'tanggal_mulai' => $tglMulai,
+                'tanggal_selesai' => $tglSelesai,
                 'status_proyek' => $proyek->status_proyek,
                 'ringkasan_rab' => [
-                    'total_pagu' => (float) ($proyek->rab?->total_pagu ?? 0),
-                    'sisa_pagu' => (float) ($proyek->rab?->sisa_pagu ?? 0),
-                    'versi_rab' => $proyek->rab?->versi_rab ?? '1',
+                    'total_pagu' => $totalPagu,
+                    'sisa_pagu' => $sisaPagu,
+                    'versi_rab' => $versiRab,
                 ],
                 'posisi_termin_berjalan' => $terminBerjalan ? [
                     'id_termin' => $terminBerjalan->id_termin,
                     'nomor_termin' => $terminBerjalan->nomor_termin,
                     'target_persentase' => (float) $terminBerjalan->target_persentase,
                     'nilai_tagihan' => (float) $terminBerjalan->nilai_tagihan,
-                    'tenggat_waktu' => $terminBerjalan->tenggat_waktu?->format('Y-m-d'),
+                    'tenggat_waktu' => $tenggatTermin,
                     'status_penagihan' => $terminBerjalan->status_penagihan,
                 ] : null,
                 'progres_fisik_terakhir' => [
                     'persentase_realisasi' => $persentaseProgres,
-                    'tanggal_lapor' => $progresTerakhir?->tanggal_lapor?->format('Y-m-d'),
+                    'tanggal_lapor' => $progresTerakhir?->tanggal_lapor instanceof \DateTimeInterface
+                        ? $progresTerakhir->tanggal_lapor->format('Y-m-d')
+                        : (string) $progresTerakhir?->tanggal_lapor,
                 ],
                 'created_at' => $proyek->created_at?->toDateTimeString(),
             ];
         });
+
+        return $result;
     }
 
     /**

@@ -31,8 +31,8 @@ class Proyek extends Model
     {
         return [
             'nilai_kontrak' => 'decimal:2',
-            'tanggal_mulai' => 'date:Y-m-d',
-            'tanggal_selesai' => 'date:Y-m-d',
+            'tanggal_mulai' => 'date',
+            'tanggal_selesai' => 'date',
         ];
     }
 
