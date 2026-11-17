@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ArchiveController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\UserController;
@@ -39,4 +40,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/projects', [ProjectController::class, 'store']);
         Route::post('/projects/new', [ProjectController::class, 'store']);
     });
+});
+
+// Manajemen Arsip Fisik & Digital / Hibrida (UC-02, UC-11 & SD-07)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/archive', [ArchiveController::class, 'index']);
+    Route::get('/archive/search', [ArchiveController::class, 'index']);
+    Route::post('/archive', [ArchiveController::class, 'store']);
+    Route::get('/archive/{id_arsip}', [ArchiveController::class, 'show']);
+    Route::delete('/archive/{id_arsip}', [ArchiveController::class, 'destroy']);
 });
