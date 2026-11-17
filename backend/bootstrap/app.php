@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Middleware\EnsureUserHasRole;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,9 +20,33 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        $middleware->alias([
+            'role' => EnsureUserHasRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Autentikasi gagal atau token tidak valid.',
+                    'errors' => null,
+                ], 401);
+            }
+        });
+
+        $exceptions->render(function (ValidationException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validasi gagal.',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+        });
     })->create();

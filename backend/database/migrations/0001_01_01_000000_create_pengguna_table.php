@@ -11,12 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
+        Schema::create('pengguna', function (Blueprint $table) {
+            $table->bigIncrements('id_pengguna');
+            $table->string('nama');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('password_hash');
+            $table->enum('peran', ['AdminLapangan', 'SekretarisKeuangan', 'Direktur']);
+            $table->boolean('status_aktif')->default(true);
+
+            // Kolom spesifik peran (Single Table Inheritance)
+            $table->string('lokasi_tugas')->nullable();
+            $table->string('nomor_kontak')->nullable();
+            $table->string('divisi')->nullable();
+            $table->decimal('batas_verifikasi_kas', 18, 2)->nullable();
+            $table->decimal('batas_approval_nominal', 18, 2)->nullable();
+
             $table->rememberToken();
             $table->timestamps();
         });
@@ -29,7 +38,7 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->unsignedBigInteger('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
@@ -42,8 +51,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('pengguna');
     }
 };
