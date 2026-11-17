@@ -40,3 +40,11 @@ jobs:
 
       - name: Run CI Checks
         run: composer ci:check
+
+      - name: Setup Frontend
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: npm run build
