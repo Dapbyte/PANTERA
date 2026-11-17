@@ -12,19 +12,23 @@ class ProjectService
 {
     /**
      * Generate kode proyek berurutan (P001, P002, dst.).
+     * Menggunakan LIKE dan regex filter di level PHP agar kompatibel dengan SQLite, MySQL, dan PostgreSQL.
      */
     public function generateKodeProyek(): string
     {
-        $lastProyek = Proyek::where('kode_proyek', 'REGEXP', '^P[0-9]+$')
+        $lastProyek = Proyek::where('kode_proyek', 'like', 'P%')
             ->orderBy('id_proyek', 'desc')
-            ->first();
+            ->limit(50)
+            ->get()
+            ->first(function (Proyek $proyek) {
+                return preg_match('/^P\d+$/', (string) $proyek->kode_proyek) === 1;
+            });
 
-        if (! $lastProyek) {
+        if (! $lastProyek || ! preg_match('/^P(\d+)$/', (string) $lastProyek->kode_proyek, $matches)) {
             return 'P001';
         }
 
-        $lastNumber = (int) substr($lastProyek->kode_proyek, 1);
-        $nextNumber = $lastNumber + 1;
+        $nextNumber = ((int) $matches[1]) + 1;
 
         return sprintf('P%03d', $nextNumber);
     }
