@@ -1,5 +1,6 @@
-import React from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { PanteraLogo } from '../common/PanteraLogo';
+import { api } from '../../lib/api';
 import {
   Home,
   Archive,
@@ -7,7 +8,9 @@ import {
   PhoneCall,
   AlertTriangle,
   LogOut,
-  ArrowLeftRight,
+  RefreshCw,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 
 export type UserRole = 'direktur' | 'sekretaris' | 'admin_lapangan';
@@ -16,288 +19,235 @@ export type ActiveTab = 'beranda' | 'arsip' | 'termin' | 'contact' | 'kendala';
 interface AppLayoutProps {
   role: UserRole;
   currentTab: ActiveTab;
-  isMobileDeviceView?: boolean;
-  forceMobile?: boolean;
   onSelectTab: (tab: ActiveTab) => void;
   onSwitchRole: (newRole: UserRole) => void;
   onLogout: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export const AppLayout: React.FC<AppLayoutProps> = ({
+type ApiStatus = 'checking' | 'online' | 'offline';
+
+const roleProfile: Record<UserRole, { initial: string; name: string; roleTitle: string }> = {
+  direktur: { initial: 'DS', name: 'Daniel Sipahutar', roleTitle: 'Direktur' },
+  sekretaris: { initial: 'R', name: 'Rita', roleTitle: 'Sekretaris & Keuangan' },
+  admin_lapangan: { initial: 'OD', name: 'Odd Dellarobia', roleTitle: 'Admin Lapangan' },
+};
+
+export const AppLayout = ({
   role,
   currentTab,
-  isMobileDeviceView = false,
-  forceMobile = false,
   onSelectTab,
   onSwitchRole,
   onLogout,
   children,
-}) => {
-  const getProfile = () => {
-    switch (role) {
-      case 'direktur':
-        return { initial: 'DS', name: 'Daniel Sipahutar', roleTitle: 'Direktur' };
-      case 'sekretaris':
-        return { initial: 'R', name: 'Rita', roleTitle: 'Sekretaris dan Keuangan' };
-      case 'admin_lapangan':
-        return { initial: 'OD', name: 'Odd Dellarobia', roleTitle: 'Admin Lapangan' };
+}: AppLayoutProps) => {
+  const profile = roleProfile[role];
+  const isAdminLapangan = role === 'admin_lapangan';
+
+  const [apiStatus, setApiStatus] = useState<ApiStatus>('checking');
+
+  const checkApi = async () => {
+    setApiStatus('checking');
+    try {
+      const response = await api.get('/health');
+      setApiStatus(response.data?.status === 'success' ? 'online' : 'offline');
+    } catch {
+      setApiStatus('offline');
     }
   };
 
-  const profile = getProfile();
-  const isAdminLapangan = role === 'admin_lapangan';
+  useEffect(() => {
+    let cancelled = false;
+
+    api
+      .get('/health')
+      .then((response) => {
+        if (!cancelled) {
+          setApiStatus(response.data?.status === 'success' ? 'online' : 'offline');
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setApiStatus('offline');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const menuItems: { tab: ActiveTab; label: string; icon: typeof Home; show: boolean }[] = [
+    { tab: 'beranda', label: 'Beranda', icon: Home, show: true },
+    { tab: 'termin', label: 'Pemantauan Proyek', icon: ClipboardList, show: role === 'sekretaris' },
+    { tab: 'kendala', label: 'Kendala Proyek', icon: AlertTriangle, show: isAdminLapangan },
+    { tab: 'arsip', label: 'Arsip', icon: Archive, show: true },
+    { tab: 'contact', label: 'Contact Person', icon: PhoneCall, show: role === 'sekretaris' },
+  ];
+
+  const desktopMenu = menuItems.filter((item) => item.show);
+  const mobileMenu: { tab: ActiveTab; label: string; icon: typeof Home }[] = [
+    { tab: 'beranda', label: 'Beranda', icon: Home },
+    ...(isAdminLapangan
+      ? [{ tab: 'kendala' as ActiveTab, label: 'Kendala', icon: AlertTriangle }]
+      : role === 'sekretaris'
+        ? [{ tab: 'termin' as ActiveTab, label: 'Proyek', icon: ClipboardList }]
+        : []),
+    { tab: 'arsip', label: 'Arsip', icon: Archive },
+    ...(role === 'sekretaris'
+      ? [{ tab: 'contact' as ActiveTab, label: 'Kontak', icon: PhoneCall }]
+      : []),
+  ];
 
   return (
-    <div className={`${forceMobile ? 'h-full flex flex-col' : 'min-h-screen md:flex-row'} bg-[#F8FAFC] flex flex-col font-sans antialiased text-gray-800`}>
-      {/* =========================================================================
-          1. TOP MOBILE HEADER (Tampil di Mobile / Layar HP sesuai Figma Admin Lapangan)
-         ========================================================================= */}
-      <header className={`${forceMobile ? 'flex' : 'md:hidden flex'} bg-[#1877F2] text-white px-5 pt-3 pb-4 shadow-md sticky top-0 z-40 flex-col`}>
-        {/* Status Bar simulation */}
-        <div className="flex items-center justify-between text-[11px] font-semibold text-white/90 pb-2">
-          <span>9:41</span>
-          <div className="flex items-center gap-1.5 text-xs">
-            <span>●●●</span>
-            <span>📶</span>
-            <span>🔋</span>
-          </div>
-        </div>
+    <div className="flex min-h-screen flex-col bg-[#F8FAFC] font-sans text-gray-800 md:flex-row">
+      {/* ============================= Mobile Header ============================= */}
+      <header className="sticky top-0 z-40 bg-[#1877F2] text-white shadow-md md:hidden">
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <PanteraLogo variant="light" showText className="h-7 w-7" />
 
-        {/* Brand & User Info */}
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex items-center gap-2">
-            <PanteraLogo variant="light" showText className="w-7 h-7" />
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="min-w-0 text-right leading-tight">
+              <div className="truncate text-xs font-semibold">{profile.name}</div>
+              <div className="truncate text-[10px] text-white/75">{profile.roleTitle}</div>
+            </div>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-[#1877F2] shadow ring-2 ring-white/30">
+              {profile.initial}
+            </div>
           </div>
-          <div className="w-8 h-8 rounded-full bg-white text-[#1877F2] flex items-center justify-center font-bold text-xs shadow ring-2 ring-white/30">
-            {profile.initial}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between text-[11px] text-white/80 pt-1">
-          <span className="font-medium">{profile.name}</span>
-          <span className="text-white/70">{profile.roleTitle}</span>
         </div>
       </header>
 
-      {/* =========================================================================
-          2. DESKTOP SIDEBAR (#1877F2 Solid Blue)
-         ========================================================================= */}
-      <aside className={`${forceMobile ? 'hidden' : 'hidden md:flex'} w-64 bg-[#1877F2] flex-col shrink-0 text-white shadow-xl min-h-screen`}>
+      {/* ============================== Desktop Sidebar ========================== */}
+      <aside className="hidden w-64 shrink-0 flex-col bg-[#1877F2] text-white shadow-xl md:sticky md:top-0 md:flex md:h-screen md:overflow-y-auto scrollbar-thin">
         <div className="p-6 pb-2">
-          {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <PanteraLogo variant="light" showText className="w-8 h-8" />
+          <div className="mb-8 flex items-center gap-2">
+            <PanteraLogo variant="light" showText className="h-8 w-8" />
           </div>
 
-          {/* User Profile Card */}
-          <div className="flex items-center gap-3 pl-1 mb-8">
-            <div className="w-10 h-10 rounded-full bg-white text-[#1877F2] flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-white/30 shrink-0">
+          <div className="mb-8 flex items-center gap-3 pl-1">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-[#1877F2] shadow-sm ring-2 ring-white/30">
               {profile.initial}
             </div>
-            <div className="overflow-hidden">
-              <div className="font-semibold text-sm tracking-wide text-white truncate">
+            <div className="min-w-0 overflow-hidden">
+              <div className="truncate text-sm font-semibold tracking-wide text-white">
                 {profile.name}
               </div>
-              <div className="text-xs text-white/75 font-normal truncate">
-                {profile.roleTitle}
-              </div>
+              <div className="truncate text-xs font-normal text-white/75">{profile.roleTitle}</div>
             </div>
           </div>
 
-          {/* Nav Header */}
           <div className="pt-2">
-            <div className="text-[11px] font-medium tracking-wider text-white/70 uppercase mb-2">
+            <div className="mb-2 text-[11px] font-medium uppercase tracking-wider text-white/70">
               Main Menu
             </div>
-            <div className="h-[1px] bg-white/20 mb-4" />
+            <div className="mb-4 h-px bg-white/20" />
           </div>
 
-          {/* Navigation Links */}
           <nav className="space-y-1.5">
-            {/* Beranda */}
-            <button
-              onClick={() => onSelectTab('beranda')}
-              className={`w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition cursor-pointer ${
-                currentTab === 'beranda'
-                  ? 'bg-white/20 text-white shadow-inner font-semibold'
-                  : 'text-white/80 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              <Home className="w-4 h-4" />
-              <span>Beranda</span>
-            </button>
-
-            {/* Kendala Proyek (Hanya Admin Lapangan) */}
-            {isAdminLapangan && (
-              <button
-                onClick={() => onSelectTab('kendala')}
-                className={`w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition cursor-pointer ${
-                  currentTab === 'kendala'
-                    ? 'bg-white/20 text-white shadow-inner font-semibold'
-                    : 'text-white/80 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <AlertTriangle className="w-4 h-4" />
-                <span>Kendala Proyek</span>
-              </button>
-            )}
-
-            {/* Arsip */}
-            <button
-              onClick={() => onSelectTab('arsip')}
-              className={`w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition cursor-pointer ${
-                currentTab === 'arsip'
-                  ? 'bg-white/20 text-white shadow-inner font-semibold'
-                  : 'text-white/80 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              <Archive className="w-4 h-4" />
-              <span>Arsip</span>
-            </button>
-
-            {/* Menu Khusus Sekretaris */}
-            {role === 'sekretaris' && (
-              <>
+            {desktopMenu.map((item) => {
+              const Icon = item.icon;
+              const active = currentTab === item.tab;
+              return (
                 <button
-                  onClick={() => onSelectTab('termin')}
-                  className={`w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition cursor-pointer ${
-                    currentTab === 'termin'
-                      ? 'bg-white/20 text-white shadow-inner font-semibold'
+                  key={item.tab}
+                  onClick={() => onSelectTab(item.tab)}
+                  className={`flex w-full items-center gap-3.5 rounded-xl px-4 py-2.5 text-sm font-medium transition cursor-pointer ${
+                    active
+                      ? 'bg-white/20 font-semibold text-white shadow-inner'
                       : 'text-white/80 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  <ClipboardList className="w-4 h-4" />
-                  <span>Pemantauan Proyek</span>
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
                 </button>
-
-                <button
-                  onClick={() => onSelectTab('contact')}
-                  className={`w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-medium transition cursor-pointer ${
-                    currentTab === 'contact'
-                      ? 'bg-white/20 text-white shadow-inner font-semibold'
-                      : 'text-white/80 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  <PhoneCall className="w-4 h-4" />
-                  <span>Contact Person</span>
-                </button>
-              </>
-            )}
+              );
+            })}
           </nav>
         </div>
 
-        {/* Bottom Section */}
-        <div className="mt-auto p-5 border-t border-white/15 space-y-2">
+        <div className="mt-auto space-y-3 border-t border-white/15 p-5">
+          <button
+            onClick={() => void checkApi()}
+            title="Klik untuk memeriksa ulang koneksi API"
+            className="flex w-full items-center gap-2 rounded-lg px-1 text-[11px] text-white/75 transition hover:text-white cursor-pointer"
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${
+                apiStatus === 'online'
+                  ? 'bg-emerald-400'
+                  : apiStatus === 'checking'
+                    ? 'animate-pulse bg-amber-300'
+                    : 'bg-rose-400'
+              }`}
+            />
+            {apiStatus === 'online' && <Wifi className="h-3.5 w-3.5" />}
+            {apiStatus === 'offline' && <WifiOff className="h-3.5 w-3.5" />}
+            {apiStatus === 'checking' && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+            <span>
+              {apiStatus === 'online'
+                ? 'API terhubung'
+                : apiStatus === 'checking'
+                  ? 'Memeriksa API…'
+                  : 'API tidak terhubung'}
+            </span>
+          </button>
+
           <div className="space-y-1">
-            <div className="text-[10px] text-white/60 uppercase tracking-wider font-semibold px-1">
-              Ganti Akses Peran:
+            <div className="px-1 text-[10px] font-semibold uppercase tracking-wider text-white/60">
+              Ganti akses peran (demo)
             </div>
             <div className="grid grid-cols-3 gap-1 text-[11px]">
-              <button
-                onClick={() => onSwitchRole('direktur')}
-                className={`py-1.5 px-2 rounded-lg text-center font-medium transition cursor-pointer ${
-                  role === 'direktur' ? 'bg-white text-[#1877F2] font-bold shadow' : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-              >
-                Direktur
-              </button>
-              <button
-                onClick={() => onSwitchRole('sekretaris')}
-                className={`py-1.5 px-2 rounded-lg text-center font-medium transition cursor-pointer ${
-                  role === 'sekretaris' ? 'bg-white text-[#1877F2] font-bold shadow' : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-              >
-                Sekretaris
-              </button>
-              <button
-                onClick={() => onSwitchRole('admin_lapangan')}
-                className={`py-1.5 px-2 rounded-lg text-center font-medium transition cursor-pointer ${
-                  role === 'admin_lapangan' ? 'bg-white text-[#1877F2] font-bold shadow' : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-              >
-                Lapangan
-              </button>
+              {(['direktur', 'sekretaris', 'admin_lapangan'] as UserRole[]).map((item) => (
+                <button
+                  key={item}
+                  onClick={() => onSwitchRole(item)}
+                  className={`rounded-lg px-1 py-1.5 text-center font-medium transition cursor-pointer ${
+                    role === item
+                      ? 'bg-white font-bold text-[#1877F2] shadow'
+                      : 'bg-white/10 text-white hover:bg-white/20'
+                  }`}
+                >
+                  {item === 'admin_lapangan' ? 'Lapangan' : item === 'direktur' ? 'Direktur' : 'Sekretaris'}
+                </button>
+              ))}
             </div>
           </div>
 
           <button
             onClick={onLogout}
-            className="w-full flex items-center gap-2 text-xs text-white/70 hover:text-white transition py-2 px-3 rounded-lg hover:bg-white/10 cursor-pointer pt-3"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/70 transition hover:bg-white/10 hover:text-white cursor-pointer"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="h-4 w-4" />
             <span>Keluar Sistem</span>
           </button>
         </div>
       </aside>
 
-      {/* =========================================================================
-          3. MAIN CONTENT AREA
-         ========================================================================= */}
-      {forceMobile ? (
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <main className="flex-1 overflow-y-auto px-4 py-5 pb-2 bg-[#F9FBFF]">
-            {children}
-          </main>
-          {/* Bottom nav inside phone frame */}
-          <nav className="flex bg-white/95 backdrop-blur-md border-t border-gray-200 px-3 py-2 z-40 items-center justify-around shadow-lg shrink-0">
-            {/* Tab 1: Beranda */}
+      {/* =============================== Main Content ============================ */}
+      <main className="min-w-0 flex-1 bg-[#F9FBFF] px-4 pb-24 pt-5 sm:px-8 sm:pt-6 md:px-10 md:pb-10 md:pt-8">
+        <div className="mx-auto w-full max-w-7xl">{children}</div>
+      </main>
+
+      {/* ============================ Mobile Bottom Nav ========================== */}
+      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-gray-200 bg-white/95 px-3 py-2 shadow-[0_-4px_16px_rgba(15,23,42,0.06)] backdrop-blur-md md:hidden">
+        {mobileMenu.map((item) => {
+          const Icon = item.icon;
+          const active = currentTab === item.tab;
+          return (
             <button
-              onClick={() => onSelectTab('beranda')}
-              className={`flex flex-col items-center gap-1 py-1.5 px-5 rounded-2xl transition cursor-pointer ${
-                currentTab === 'beranda'
-                  ? 'bg-blue-50 text-[#1877F2] font-semibold'
-                  : 'text-gray-400 hover:text-gray-600'
+              key={item.tab}
+              onClick={() => onSelectTab(item.tab)}
+              className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-1.5 transition cursor-pointer ${
+                active ? 'bg-blue-50 font-semibold text-[#1877F2]' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              <Home className="w-4 h-4" />
-              <span className="text-[10px]">Beranda</span>
+              <Icon className="h-5 w-5" />
+              <span className="text-[10px] leading-none">{item.label}</span>
             </button>
-
-            {isAdminLapangan ? (
-              <button
-                onClick={() => onSelectTab('kendala')}
-                className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-2xl transition cursor-pointer ${
-                  currentTab === 'kendala'
-                    ? 'bg-blue-50 text-[#1877F2] font-semibold'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                <AlertTriangle className="w-4 h-4" />
-                <span className="text-[10px]">Kendala Proyek</span>
-              </button>
-            ) : role === 'sekretaris' ? (
-              <button
-                onClick={() => onSelectTab('termin')}
-                className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-2xl transition cursor-pointer ${
-                  currentTab === 'termin'
-                    ? 'bg-blue-50 text-[#1877F2] font-semibold'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                <ClipboardList className="w-4 h-4" />
-                <span className="text-[10px]">Proyek</span>
-              </button>
-            ) : null}
-
-            <button
-              onClick={() => onSelectTab('arsip')}
-              className={`flex flex-col items-center gap-1 py-1.5 px-5 rounded-2xl transition cursor-pointer ${
-                currentTab === 'arsip'
-                  ? 'bg-blue-50 text-[#1877F2] font-semibold'
-                  : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              <Archive className="w-4 h-4" />
-              <span className="text-[10px]">Arsip</span>
-            </button>
-          </nav>
-        </div>
-      ) : (
-        <main className="flex-1 overflow-y-auto px-4 sm:px-8 md:px-10 py-6 md:py-8 pb-24 md:pb-8 bg-[#F9FBFF]">
-          {children}
-        </main>
-      )}
+          );
+        })}
+      </nav>
     </div>
   );
 };

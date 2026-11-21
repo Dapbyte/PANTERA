@@ -34,7 +34,31 @@ export default function ApiTest() {
   };
 
   useEffect(() => {
-    checkAPI();
+    let cancelled = false;
+
+    api
+      .get('/health')
+      .then((response) => {
+        if (typeof response.data !== 'object' || response.data === null) {
+          throw new Error('Response bukan JSON: ' + JSON.stringify(response.data));
+        }
+        if (!cancelled) {
+          setData(response.data as HealthResponse);
+          setError(null);
+        }
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        console.error('API ERROR:', err);
+        setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat menghubungkan API');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const mockData: HealthResponse = {
@@ -73,7 +97,7 @@ export default function ApiTest() {
             <div className="p-4 bg-rose-950/40 border border-rose-800 rounded-lg text-rose-300 text-sm">
               <p className="font-semibold text-rose-200 mb-1">Status Error: {error}</p>
               <p className="text-xs text-rose-300/80 leading-relaxed">
-                Penyebab status <strong>502 Bad Gateway</strong>: Proxy Vite di port 5174 mencoba
+                Penyebab status <strong>502 Bad Gateway</strong>: Proxy Vite di port 5173 mencoba
                 meneruskan request <code className="bg-rose-900/60 px-1 py-0.5 rounded">/api/health</code> ke server backend Laravel di port 8000, namun backend belum dinyalakan.
               </p>
             </div>
@@ -128,7 +152,7 @@ export default function ApiTest() {
 
         <div className="text-xs text-slate-500 border-t border-slate-700/60 pt-3 flex justify-between items-center">
           <span>PANTERA Frontend Client</span>
-          <span>Port: 5174</span>
+          <span>Port: 5173</span>
         </div>
       </div>
     </div>

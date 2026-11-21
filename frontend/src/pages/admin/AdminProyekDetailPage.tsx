@@ -18,6 +18,7 @@ import {
   Image as ImageIcon,
   X,
   Send,
+  Flag,
 } from 'lucide-react';
 
 interface AdminProyekDetailPageProps {
@@ -66,7 +67,7 @@ export const AdminProyekDetailPage: React.FC<AdminProyekDetailPageProps> = ({
   ];
 
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="space-y-5">
       {/* Title & Back Arrow */}
       <div className="flex items-center gap-3">
         <button
@@ -232,8 +233,8 @@ export const AdminProyekDetailPage: React.FC<AdminProyekDetailPageProps> = ({
                       %
                     </span>
                   </div>
-                  <div className="text-[10px] text-[#1877F2] flex items-center gap-1">
-                    <span>⚑</span>
+                  <div className="flex items-center gap-1 text-[10px] text-[#1877F2]">
+                    <Flag className="h-3 w-3" />
                     <span>Target Termin 2: 70,0%</span>
                   </div>
                 </div>
@@ -323,7 +324,7 @@ export const AdminProyekDetailPage: React.FC<AdminProyekDetailPageProps> = ({
                     <p className="text-[10px] text-gray-400">{item.rolePengaju}</p>
                   </div>
                   <span
-                    className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
+                    className={`inline-block whitespace-nowrap px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
                       item.sifat === 'Darurat'
                         ? 'bg-rose-50 text-rose-500 border border-rose-100'
                         : 'bg-blue-50 text-blue-500 border border-blue-100'
@@ -345,7 +346,7 @@ export const AdminProyekDetailPage: React.FC<AdminProyekDetailPageProps> = ({
 
                   <div className="flex items-center gap-2">
                     <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
+                      className={`inline-block whitespace-nowrap px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
                         item.status === 'Pending'
                           ? 'bg-amber-50 text-amber-600 border border-amber-100'
                           : item.status === 'Tervalidasi Keuangan'
@@ -365,7 +366,7 @@ export const AdminProyekDetailPage: React.FC<AdminProyekDetailPageProps> = ({
           {/* 2. DESKTOP TABLE */}
           <div className="hidden md:block bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full min-w-[640px] text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-100 text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-white">
                     <th className="py-3 px-4 pl-6">ID</th>
@@ -374,7 +375,7 @@ export const AdminProyekDetailPage: React.FC<AdminProyekDetailPageProps> = ({
                     <th className="py-3 px-4 text-center">Sifat</th>
                     <th className="py-3 px-4">Total Estimasi</th>
                     <th className="py-3 px-4 text-center">Status</th>
-                    <th className="py-3 px-4 pr-6"></th>
+                    <th className="w-12 py-3 pl-2 pr-4"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100/80 text-xs text-gray-800">
@@ -390,7 +391,7 @@ export const AdminProyekDetailPage: React.FC<AdminProyekDetailPageProps> = ({
                       </td>
                       <td className="py-3.5 px-4 text-center">
                         <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
+                          className={`inline-block whitespace-nowrap px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
                             item.sifat === 'Darurat'
                               ? 'bg-rose-50 text-rose-500 border border-rose-100'
                               : 'bg-blue-50 text-blue-500 border border-blue-100'
@@ -404,7 +405,7 @@ export const AdminProyekDetailPage: React.FC<AdminProyekDetailPageProps> = ({
                       </td>
                       <td className="py-3.5 px-4 text-center">
                         <span
-                          className={`inline-block px-3 py-0.5 rounded-full text-[10px] font-medium ${
+                          className={`inline-block whitespace-nowrap px-3 py-0.5 rounded-full text-[10px] font-medium ${
                             item.status === 'Pending'
                               ? 'bg-amber-50 text-amber-600 border border-amber-100'
                               : item.status === 'Tervalidasi Keuangan'
@@ -415,7 +416,7 @@ export const AdminProyekDetailPage: React.FC<AdminProyekDetailPageProps> = ({
                           ● {item.status}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 pr-6 text-right">
+                      <td className="py-3.5 pl-2 pr-5 text-right">
                         <ChevronRight className="w-4 h-4 text-gray-400 inline-block" />
                       </td>
                     </tr>

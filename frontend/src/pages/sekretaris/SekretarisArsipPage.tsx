@@ -49,7 +49,7 @@ export const SekretarisArsipPage: React.FC<SekretarisArsipPageProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6">
       {/* Title */}
       <h1 className="text-2xl font-bold text-[#1877F2] tracking-tight">Arsip</h1>
 
@@ -113,41 +113,41 @@ export const SekretarisArsipPage: React.FC<SekretarisArsipPageProps> = ({
       {/* Table Section with STATUS Column (Image 4) */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full min-w-[640px] table-fixed text-left border-collapse">
             <thead>
               <tr className="border-b border-gray-100 text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-white">
-                <th className="py-3 px-4 pl-6">Kode</th>
-                <th className="py-3 px-4">Judul Dokumen</th>
-                <th className="py-3 px-4">Tanggal</th>
-                <th className="py-3 px-4 text-center">Tipe</th>
-                <th className="py-3 px-4">Lokasi Arsip</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center pr-6">Aksi</th>
+                <th className="w-[114px] py-3 pl-5 pr-2">Kode</th>
+                <th className="py-3 px-2">Judul Dokumen</th>
+                <th className="w-[86px] py-3 px-2">Tanggal</th>
+                <th className="hidden w-[98px] py-3 px-2 text-center xl:table-cell">Tipe</th>
+                <th className="hidden w-[136px] py-3 px-2 xl:table-cell">Lokasi Arsip</th>
+                <th className="w-[80px] py-3 px-2 text-center">Status</th>
+                <th className="w-[150px] py-3 pl-2 pr-5 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-xs text-gray-800">
               {filteredList.map((item) => (
                 <tr key={item.id} className="hover:bg-blue-50/40 transition">
-                  <td className="py-4 px-4 pl-6 font-semibold text-gray-800 font-mono text-[11px]">
+                  <td className="py-4 pl-5 pr-2 font-mono text-[11px] font-semibold text-gray-800">
                     {item.kode}
                   </td>
-                  <td className="py-4 px-4 font-medium text-gray-900 max-w-xs leading-relaxed">
+                  <td className="py-4 px-2 font-medium leading-relaxed text-gray-900">
                     {item.judulDokumen}
                   </td>
-                  <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{item.tanggal}</td>
-                  <td className="py-4 px-4 text-center whitespace-nowrap">
+                  <td className="py-4 px-2 text-gray-600 whitespace-nowrap">{item.tanggal}</td>
+                  <td className="hidden py-4 px-2 text-center xl:table-cell">
                     <span
-                      className={`inline-block px-3 py-1 rounded-full text-[11px] font-medium ${getTipeBadge(
+                      className={`inline-block whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-medium ${getTipeBadge(
                         item.tipe
                       )}`}
                     >
                       {item.tipe}
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-gray-700 whitespace-nowrap">{item.lokasiArsip}</td>
-                  <td className="py-4 px-4 text-center whitespace-nowrap">
+                  <td className="hidden py-4 px-2 text-gray-700 xl:table-cell">{item.lokasiArsip}</td>
+                  <td className="py-4 px-2 text-center">
                     <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
+                      className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium ${
                         item.status === 'Disetujui'
                           ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                           : 'bg-rose-50 text-rose-600 border border-rose-100'
@@ -156,11 +156,11 @@ export const SekretarisArsipPage: React.FC<SekretarisArsipPageProps> = ({
                       {item.status}
                     </span>
                   </td>
-                  <td className="py-4 px-4 pr-6 text-center whitespace-nowrap">
-                    <div className="flex items-center justify-center gap-2">
+                  <td className="py-4 pl-2 pr-5 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
                       <button
                         onClick={() => onViewRincian(item)}
-                        className="bg-[#1877F2] hover:bg-blue-600 text-white text-xs px-4 py-1.5 rounded-lg font-medium transition cursor-pointer shadow-sm"
+                        className="bg-[#1877F2] hover:bg-blue-600 text-white text-[11px] px-3 py-1.5 rounded-lg font-medium transition cursor-pointer shadow-sm whitespace-nowrap"
                       >
                         Rincian
                       </button>
@@ -170,7 +170,8 @@ export const SekretarisArsipPage: React.FC<SekretarisArsipPageProps> = ({
                             onDeleteArsip(item.id);
                           }
                         }}
-                        className="bg-[#DC2626] hover:bg-red-700 text-white text-xs px-4 py-1.5 rounded-lg font-medium transition cursor-pointer shadow-sm flex items-center gap-1"
+                        className="bg-[#DC2626] hover:bg-red-700 text-white text-[11px] px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer shadow-sm flex items-center gap-1 whitespace-nowrap"
+                        title="Hapus arsip"
                       >
                         <Trash2 className="w-3 h-3" />
                         <span>Hapus</span>
