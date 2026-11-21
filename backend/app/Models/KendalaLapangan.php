@@ -10,6 +10,9 @@ class KendalaLapangan extends Model
 {
     use HasFactory;
 
+    public const STATUS_AKTIF = 'Aktif';
+    public const STATUS_RESOLVED = 'Resolved';
+
     protected $table = 'kendala_lapangan';
 
     protected $primaryKey = 'id_kendala';
@@ -24,6 +27,7 @@ class KendalaLapangan extends Model
         'status_penanganan',
         'tanggal_resolved',
         'catatan_penyelesaian',
+        'path_foto',
     ];
 
     protected function casts(): array
