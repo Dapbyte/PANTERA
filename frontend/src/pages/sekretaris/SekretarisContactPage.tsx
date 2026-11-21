@@ -16,7 +16,7 @@ export const SekretarisContactPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8 max-w-6xl">
+    <div className="space-y-8">
       {/* Title */}
       <h1 className="text-2xl font-bold text-[#1877F2] tracking-tight">Contact Person</h1>
 

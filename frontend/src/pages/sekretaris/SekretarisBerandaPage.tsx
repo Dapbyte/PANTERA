@@ -16,7 +16,7 @@ export const SekretarisBerandaPage: React.FC<SekretarisBerandaPageProps> = ({
   const totalAntrean = pengajuanList.length;
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6">
       {/* Title */}
       <h1 className="text-2xl font-bold text-[#1877F2] tracking-tight">Beranda</h1>
 
@@ -72,7 +72,7 @@ export const SekretarisBerandaPage: React.FC<SekretarisBerandaPageProps> = ({
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full min-w-[680px] text-left border-collapse">
               <thead>
                 <tr className="border-b border-gray-100 text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-white">
                   <th className="py-3 px-4 pl-6">ID</th>
@@ -81,7 +81,7 @@ export const SekretarisBerandaPage: React.FC<SekretarisBerandaPageProps> = ({
                   <th className="py-3 px-4 text-center">Sifat</th>
                   <th className="py-3 px-4">Total Estimasi</th>
                   <th className="py-3 px-4">Tanggal Pengajuan</th>
-                  <th className="py-3 px-4 pr-6"></th>
+                  <th className="w-12 py-3 pl-2 pr-4"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100/80">
@@ -96,7 +96,7 @@ export const SekretarisBerandaPage: React.FC<SekretarisBerandaPageProps> = ({
                     <td className="py-3.5 px-4">{item.namaProyek}</td>
                     <td className="py-3.5 px-4 text-center">
                       <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
+                        className={`inline-block whitespace-nowrap px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
                           item.sifat === 'Darurat'
                             ? 'bg-rose-50 text-rose-500 border border-rose-100'
                             : 'bg-blue-50 text-blue-500 border border-blue-100'
@@ -109,7 +109,7 @@ export const SekretarisBerandaPage: React.FC<SekretarisBerandaPageProps> = ({
                       {formatRupiah(item.totalEstimasi)}
                     </td>
                     <td className="py-3.5 px-4 text-gray-700">{item.tanggalPengajuan}</td>
-                    <td className="py-3.5 px-4 pr-6 text-right">
+                    <td className="py-3.5 pl-2 pr-5 text-right">
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#1877F2] transition inline-block" />
                     </td>
                   </tr>

@@ -39,7 +39,7 @@ export const DirekturArsipPage: React.FC<DirekturArsipPageProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6">
       {/* Title */}
       <h1 className="text-2xl font-bold text-[#1877F2] tracking-tight">Arsip</h1>
 
@@ -103,42 +103,42 @@ export const DirekturArsipPage: React.FC<DirekturArsipPageProps> = ({
       {/* Table Section */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full min-w-[640px] table-fixed text-left border-collapse">
             <thead>
               <tr className="border-b border-gray-100 text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-white">
-                <th className="py-3 px-4 pl-6">Kode</th>
-                <th className="py-3 px-4">Judul Dokumen</th>
-                <th className="py-3 px-4">Tanggal</th>
-                <th className="py-3 px-4 text-center">Tipe</th>
-                <th className="py-3 px-4">Lokasi Arsip</th>
-                <th className="py-3 px-4 text-center pr-6">Aksi</th>
+                <th className="w-[116px] py-3 pl-5 pr-2">Kode</th>
+                <th className="py-3 px-2">Judul Dokumen</th>
+                <th className="w-[88px] py-3 px-2">Tanggal</th>
+                <th className="w-[100px] py-3 px-2 text-center">Tipe</th>
+                <th className="hidden w-[140px] py-3 px-2 xl:table-cell">Lokasi Arsip</th>
+                <th className="w-[150px] py-3 pl-2 pr-5 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-xs text-gray-800">
               {filteredList.map((item) => (
                 <tr key={item.id} className="hover:bg-blue-50/40 transition">
-                  <td className="py-4 px-4 pl-6 font-semibold text-gray-800 font-mono text-[11px]">
+                  <td className="py-4 pl-5 pr-2 font-mono text-[11px] font-semibold text-gray-800">
                     {item.kode}
                   </td>
-                  <td className="py-4 px-4 font-medium text-gray-900 max-w-xs leading-relaxed">
+                  <td className="py-4 px-2 font-medium leading-relaxed text-gray-900">
                     {item.judulDokumen}
                   </td>
-                  <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{item.tanggal}</td>
-                  <td className="py-4 px-4 text-center whitespace-nowrap">
+                  <td className="py-4 px-2 text-gray-600 whitespace-nowrap">{item.tanggal}</td>
+                  <td className="py-4 px-2 text-center">
                     <span
-                      className={`inline-block px-3 py-1 rounded-full text-[11px] font-medium ${getTipeBadge(
+                      className={`inline-block whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-medium ${getTipeBadge(
                         item.tipe
                       )}`}
                     >
                       {item.tipe}
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-gray-700 whitespace-nowrap">{item.lokasiArsip}</td>
-                  <td className="py-4 px-4 pr-6 text-center whitespace-nowrap">
-                    <div className="flex items-center justify-center gap-2">
+                  <td className="hidden py-4 px-2 text-gray-700 xl:table-cell">{item.lokasiArsip}</td>
+                  <td className="py-4 pl-2 pr-5 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
                       <button
                         onClick={() => onViewRincian(item)}
-                        className="bg-[#1877F2] hover:bg-blue-600 text-white text-xs px-4 py-1.5 rounded-lg font-medium transition cursor-pointer shadow-sm"
+                        className="bg-[#1877F2] hover:bg-blue-600 text-white text-[11px] px-3 py-1.5 rounded-lg font-medium transition cursor-pointer shadow-sm whitespace-nowrap"
                       >
                         Rincian
                       </button>
@@ -148,7 +148,8 @@ export const DirekturArsipPage: React.FC<DirekturArsipPageProps> = ({
                             onDeleteArsip(item.id);
                           }
                         }}
-                        className="bg-[#DC2626] hover:bg-red-700 text-white text-xs px-4 py-1.5 rounded-lg font-medium transition cursor-pointer shadow-sm flex items-center gap-1"
+                        className="bg-[#DC2626] hover:bg-red-700 text-white text-[11px] px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer shadow-sm flex items-center gap-1 whitespace-nowrap"
+                        title="Hapus arsip"
                       >
                         <Trash2 className="w-3 h-3" />
                         <span>Hapus</span>

@@ -36,7 +36,7 @@ export const SekretarisTerminDetailPage: React.FC<SekretarisTerminDetailPageProp
   const [berkasList] = useState(initialBerkasTerminList);
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6">
       {/* Title & Back Arrow */}
       <div className="flex items-center gap-3">
         <button
@@ -306,7 +306,7 @@ export const SekretarisTerminDetailPage: React.FC<SekretarisTerminDetailPageProp
           {/* Table of Berkas matching Image 7 */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full min-w-[720px] text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-100 text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-white">
                     <th className="py-3 px-4 pl-6">Kode</th>

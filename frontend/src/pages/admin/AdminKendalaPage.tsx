@@ -43,7 +43,7 @@ export const AdminKendalaPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="space-y-5">
       {/* Title */}
       <h1 className="text-xl sm:text-2xl font-bold text-[#1877F2] tracking-tight">
         Kendala Proyek
@@ -89,7 +89,7 @@ export const AdminKendalaPage: React.FC = () => {
               <span className="w-16 font-semibold bg-[#1877F2] text-white text-[10px] px-2.5 py-1 rounded-full text-center shrink-0">
                 Dates
               </span>
-              <div className="flex-1 grid grid-cols-25 gap-1 text-center font-semibold text-gray-700">
+              <div className="flex-1 grid grid-cols-[repeat(25,minmax(0,1fr))] gap-1 text-center font-semibold text-gray-700">
                 {weatherDays.map((w) => (
                   <button
                     key={w.day}
@@ -111,7 +111,7 @@ export const AdminKendalaPage: React.FC = () => {
               <span className="w-16 font-semibold bg-[#1877F2] text-white text-[10px] px-2.5 py-1 rounded-full text-center shrink-0">
                 Weather
               </span>
-              <div className="flex-1 grid grid-cols-25 gap-1 text-center">
+              <div className="flex-1 grid grid-cols-[repeat(25,minmax(0,1fr))] gap-1 text-center">
                 {weatherDays.map((w) => (
                   <div key={w.day} className="py-1">
                     {renderWeatherIcon(w.icon)}
@@ -124,7 +124,7 @@ export const AdminKendalaPage: React.FC = () => {
               <span className="w-16 font-semibold bg-[#1877F2] text-white text-[10px] px-2.5 py-1 rounded-full text-center shrink-0">
                 Temp
               </span>
-              <div className="flex-1 grid grid-cols-25 gap-1 text-center text-[11px] text-gray-600 font-mono">
+              <div className="flex-1 grid grid-cols-[repeat(25,minmax(0,1fr))] gap-1 text-center text-[11px] text-gray-600 font-mono">
                 {weatherDays.map((w) => (
                   <div key={w.day} className="py-0.5">
                     {w.temp}°
@@ -137,7 +137,7 @@ export const AdminKendalaPage: React.FC = () => {
               <span className="w-16 font-semibold bg-[#1877F2] text-white text-[10px] px-2.5 py-1 rounded-full text-center shrink-0">
                 Humid
               </span>
-              <div className="flex-1 grid grid-cols-25 gap-1 text-center text-[11px] text-gray-600 font-mono">
+              <div className="flex-1 grid grid-cols-[repeat(25,minmax(0,1fr))] gap-1 text-center text-[11px] text-gray-600 font-mono">
                 {weatherDays.map((w) => (
                   <div key={w.day} className="py-0.5">
                     {w.humid}%

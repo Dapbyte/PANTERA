@@ -25,8 +25,19 @@ export const AdminBerandaPage: React.FC<AdminBerandaPageProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Title */}
-      <h1 className="text-lg font-bold text-[#1877F2] tracking-tight">Daftar Proyek</h1>
+      {/* Title & Action */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-bold tracking-tight text-[#1877F2] sm:text-2xl">
+          Daftar Proyek
+        </h1>
+        <button
+          onClick={() => window.alert('Membuka formulir pendaftaran proyek baru...')}
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 cursor-pointer"
+        >
+          <Plus className="h-4 w-4 text-[#1877F2]" />
+          <span>Unggah Proyek Baru</span>
+        </button>
+      </div>
 
       {/* Ringkasan */}
       <div>
@@ -56,15 +67,6 @@ export const AdminBerandaPage: React.FC<AdminBerandaPageProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Action: + Unggah Proyek Baru */}
-      <button
-        onClick={() => alert('Membuka formulir pendaftaran proyek baru...')}
-        className="w-full bg-white border border-gray-200 hover:bg-gray-50 px-4 py-2.5 rounded-full text-xs font-semibold text-gray-700 flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
-      >
-        <Plus className="w-4 h-4 text-[#1877F2]" />
-        <span>Unggah Proyek Baru</span>
-      </button>
 
       {/* Filter and Search Bar */}
       <div className="space-y-2">
@@ -130,7 +132,7 @@ export const AdminBerandaPage: React.FC<AdminBerandaPageProps> = ({
           Menunggu Persetujuan
         </div>
 
-        <div className="space-y-2.5">
+        <div className="grid gap-3 lg:grid-cols-2">
           {filteredList.map((item) => (
             <div
               key={item.id}
@@ -141,7 +143,7 @@ export const AdminBerandaPage: React.FC<AdminBerandaPageProps> = ({
               <div className="flex items-center justify-between mb-2">
                 <span className="font-bold text-xs text-[#1877F2] font-mono">{item.id}</span>
                 <span
-                  className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                  className={`inline-block whitespace-nowrap px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
                     item.status === 'Aman'
                       ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                       : 'bg-rose-50 text-rose-500 border border-rose-100'

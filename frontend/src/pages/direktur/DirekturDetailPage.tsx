@@ -78,7 +78,7 @@ export const DirekturDetailPage: React.FC<DirekturDetailPageProps> = ({
         {isRab ? (
           <div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full min-w-[520px] text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-100 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                     <th className="py-2.5 px-4 pl-0">Material</th>

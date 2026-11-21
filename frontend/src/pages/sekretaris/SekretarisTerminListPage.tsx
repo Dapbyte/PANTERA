@@ -24,7 +24,7 @@ export const SekretarisTerminListPage: React.FC<SekretarisTerminListPageProps> =
   });
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6">
       {/* Title */}
       <h1 className="text-2xl font-bold text-[#1877F2] tracking-tight">Daftar Proyek</h1>
 
@@ -118,7 +118,7 @@ export const SekretarisTerminListPage: React.FC<SekretarisTerminListPageProps> =
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full min-w-[720px] text-left border-collapse">
               <thead>
                 <tr className="border-b border-gray-100 text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-white">
                   <th className="py-3 px-4 pl-6">ID</th>
@@ -127,7 +127,7 @@ export const SekretarisTerminListPage: React.FC<SekretarisTerminListPageProps> =
                   <th className="py-3 px-4">Posisi Termin</th>
                   <th className="py-3 px-4">Termin Selanjutnya</th>
                   <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 pr-6"></th>
+                  <th className="w-12 py-3 pl-2 pr-4"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100/80 text-xs text-gray-800">
@@ -144,7 +144,7 @@ export const SekretarisTerminListPage: React.FC<SekretarisTerminListPageProps> =
                     <td className="py-3.5 px-4 text-gray-700">{item.terminSelanjutnya}</td>
                     <td className="py-3.5 px-4 text-center">
                       <span
-                        className={`inline-block px-3 py-0.5 rounded-full text-[10px] font-medium ${
+                        className={`inline-block whitespace-nowrap px-3 py-0.5 rounded-full text-[10px] font-medium ${
                           item.status === 'Aman'
                             ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                             : 'bg-rose-50 text-rose-500 border border-rose-100'
@@ -153,7 +153,7 @@ export const SekretarisTerminListPage: React.FC<SekretarisTerminListPageProps> =
                         {item.status}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 pr-6 text-right">
+                    <td className="py-3.5 pl-2 pr-5 text-right">
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#1877F2] transition inline-block" />
                     </td>
                   </tr>
