@@ -14,7 +14,6 @@ use App\Services\ProjectService;
  *   Termin 2: target 70%,  tenggat 2026-07-31, tagihan Rp400.000.000
  *   Termin 3: target 100%, tenggat 2026-12-31, tagihan Rp300.000.000
  */
-
 class ProyekUji
 {
     public static function buat(): Proyek

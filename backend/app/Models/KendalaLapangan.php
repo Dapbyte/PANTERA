@@ -11,6 +11,7 @@ class KendalaLapangan extends Model
     use HasFactory;
 
     public const STATUS_AKTIF = 'Aktif';
+
     public const STATUS_RESOLVED = 'Resolved';
 
     protected $table = 'kendala_lapangan';

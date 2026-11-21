@@ -8,15 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('kendala_lapangan', function(Blueprint $table){
-            $table->string('path_foto')->nullable()->after
-            ('catatan_penyelesaian');
+        Schema::table('kendala_lapangan', function (Blueprint $table) {
+            $table->string('path_foto')->nullable()->after('catatan_penyelesaian');
         });
     }
 
     public function down(): void
     {
-        Schema::table('kendala_lapangan', function(Blueprint $table){
+        Schema::table('kendala_lapangan', function (Blueprint $table) {
             $table->dropColumn('path_foto');
         });
     }

@@ -11,10 +11,13 @@ class Termin extends Model
 {
     use HasFactory;
 
-    //Status penagihan
+    // Status penagihan
     public const STATUS_BELUM_SIAP = 'Belum Siap';
+
     public const STATUS_SIAP_SERAH = 'Siap serah';
+
     public const STATUS_DIAJUKAN = 'Diajukan ke Dinas';
+
     public const STATUS_SP2D_CAIR = 'SP2D cair';
 
     protected $table = 'termin';
