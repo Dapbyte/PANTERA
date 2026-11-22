@@ -88,7 +88,9 @@ services:
 
     environment:
       VITE_API_BASE_URL: /api
+      FRONTEND_PORT: 5173
       API_PROXY_TARGET: http://backend:8000
+      VITE_USE_POLLING: "true"
 
     depends_on:
       - backend

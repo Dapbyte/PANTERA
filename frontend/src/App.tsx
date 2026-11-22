@@ -1,131 +1,173 @@
-import ApiTest from './apitest'
+import { useState } from 'react';
+import { LoginPage } from './pages/LoginPage';
+import { AppLayout, type UserRole, type ActiveTab } from './components/layout/AppLayout';
 
-function App() {
+// Halaman Direktur
+import { DirekturBerandaPage } from './pages/direktur/DirekturBerandaPage';
+import { DirekturDetailPage } from './pages/direktur/DirekturDetailPage';
+import { DirekturArsipPage } from './pages/direktur/DirekturArsipPage';
+
+// Halaman Sekretaris
+import { SekretarisBerandaPage } from './pages/sekretaris/SekretarisBerandaPage';
+import { SekretarisArsipPage } from './pages/sekretaris/SekretarisArsipPage';
+import { SekretarisTerminListPage } from './pages/sekretaris/SekretarisTerminListPage';
+import { SekretarisTerminDetailPage } from './pages/sekretaris/SekretarisTerminDetailPage';
+import { SekretarisContactPage } from './pages/sekretaris/SekretarisContactPage';
+
+// Halaman Admin Lapangan
+import { AdminBerandaPage } from './pages/admin/AdminBerandaPage';
+import { AdminProyekDetailPage } from './pages/admin/AdminProyekDetailPage';
+import { AdminKendalaPage } from './pages/admin/AdminKendalaPage';
+import { AdminArsipPage } from './pages/admin/AdminArsipPage';
+
+// Mock Data
+import { initialPengajuanList, initialArsipList } from './mock/direkturData';
+import { initialProyekTerminList } from './mock/sekretarisData';
+import type { ArsipItem } from './types/direktur';
+
+export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [role, setRole] = useState<UserRole>('admin_lapangan');
+  const [currentTab, setCurrentTab] = useState<ActiveTab>('beranda');
+
+  // State navigasi detail
+  const [selectedPengajuanId, setSelectedPengajuanId] = useState<string | null>(null);
+  const [selectedProyekId, setSelectedProyekId] = useState<string | null>(null);
+
+  // Data state
+  const [pengajuanList, setPengajuanList] = useState(initialPengajuanList);
+  const [arsipList, setArsipList] = useState(initialArsipList);
+  const [proyekList] = useState(initialProyekTerminList);
+
+  const resetNavigation = () => {
+    setSelectedPengajuanId(null);
+    setSelectedProyekId(null);
+  };
+
+  const handleSelectTab = (tab: ActiveTab) => {
+    setCurrentTab(tab);
+    resetNavigation();
+  };
+
+  const handleSwitchRole = (newRole: UserRole) => {
+    setRole(newRole);
+    setCurrentTab('beranda');
+    resetNavigation();
+  };
+
+  const handleApprove = (id: string, notes: string) => {
+    window.alert(`Pengajuan ${id} berhasil DISETUJUI!${notes ? ` Catatan: ${notes}` : ''}`);
+    setPengajuanList((prev) => prev.filter((p) => p.id !== id));
+    setSelectedPengajuanId(null);
+  };
+
+  const handleReject = (id: string, notes: string) => {
+    window.alert(`Pengajuan ${id} DITOLAK / DIMINTA REVISI. Catatan: ${notes}`);
+    setPengajuanList((prev) => prev.filter((p) => p.id !== id));
+    setSelectedPengajuanId(null);
+  };
+
+  const handleDeleteArsip = (id: string) => {
+    setArsipList((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const handleViewRincianArsip = (item: ArsipItem) => {
+    window.alert(
+      `Membuka rincian berkas arsip:\nKode: ${item.kode}\nJudul: ${item.judulDokumen}\nLokasi: ${item.lokasiArsip}`,
+    );
+  };
+
+  if (!isAuthenticated) {
+    return <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
+
+  const selectedPengajuan = pengajuanList.find((p) => p.id === selectedPengajuanId);
+
   return (
-    <main><ApiTest /></main>
-  )
+    <AppLayout
+      role={role}
+      currentTab={currentTab}
+      onSelectTab={handleSelectTab}
+      onSwitchRole={handleSwitchRole}
+      onLogout={() => setIsAuthenticated(false)}
+    >
+      {/* VIEW: ROLE DIREKTUR */}
+      {role === 'direktur' &&
+        (selectedPengajuan ? (
+          <DirekturDetailPage
+            pengajuan={selectedPengajuan}
+            onBack={() => setSelectedPengajuanId(null)}
+            onApprove={handleApprove}
+            onReject={handleReject}
+          />
+        ) : currentTab === 'beranda' ? (
+          <DirekturBerandaPage
+            pengajuanList={pengajuanList}
+            onSelectPengajuan={(id) => setSelectedPengajuanId(id)}
+          />
+        ) : (
+          <DirekturArsipPage
+            arsipList={arsipList}
+            onDeleteArsip={handleDeleteArsip}
+            onViewRincian={handleViewRincianArsip}
+          />
+        ))}
+
+      {/* VIEW: ROLE SEKRETARIS DAN KEUANGAN */}
+      {role === 'sekretaris' &&
+        (selectedPengajuan ? (
+          <DirekturDetailPage
+            pengajuan={selectedPengajuan}
+            onBack={() => setSelectedPengajuanId(null)}
+            onApprove={handleApprove}
+            onReject={handleReject}
+          />
+        ) : currentTab === 'beranda' ? (
+          <SekretarisBerandaPage
+            pengajuanList={pengajuanList}
+            onSelectPengajuan={(id) => setSelectedPengajuanId(id)}
+          />
+        ) : currentTab === 'arsip' ? (
+          <SekretarisArsipPage
+            arsipList={arsipList}
+            onDeleteArsip={handleDeleteArsip}
+            onViewRincian={handleViewRincianArsip}
+          />
+        ) : currentTab === 'termin' ? (
+          selectedProyekId ? (
+            <SekretarisTerminDetailPage
+              proyekId={selectedProyekId}
+              onBack={() => setSelectedProyekId(null)}
+            />
+          ) : (
+            <SekretarisTerminListPage
+              proyekList={proyekList}
+              onSelectProyek={(id) => setSelectedProyekId(id)}
+            />
+          )
+        ) : (
+          <SekretarisContactPage />
+        ))}
+
+      {/* VIEW: ROLE ADMIN LAPANGAN */}
+      {role === 'admin_lapangan' &&
+        (currentTab === 'beranda' ? (
+          selectedProyekId ? (
+            <AdminProyekDetailPage
+              proyekId={selectedProyekId}
+              onBack={() => setSelectedProyekId(null)}
+            />
+          ) : (
+            <AdminBerandaPage
+              proyekList={proyekList}
+              onSelectProyek={(id) => setSelectedProyekId(id)}
+            />
+          )
+        ) : currentTab === 'kendala' ? (
+          <AdminKendalaPage />
+        ) : (
+          <AdminArsipPage arsipList={arsipList} onViewRincian={handleViewRincianArsip} />
+        ))}
+    </AppLayout>
+  );
 }
-export default App
-
-// import { useState } from 'react'
-// import heroImg from './assets/hero.png'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from './assets/vite.svg'
-// import './App.css'
-
-// function App() {
-//   const [count, setCount] = useState(0)
-
-//   return (
-//     <>
-//       <section id="center">
-//         <div className="hero">
-//           <img src={heroImg} className="base" width="170" height="179" alt="" />
-//           <img src={reactLogo} className="framework" alt="React logo" />
-//           <img src={viteLogo} className="vite" alt="Vite logo" />
-//         </div>
-//         <div>
-//           <h1>Get started</h1>
-//           <p>
-//             Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-//           </p>
-//         </div>
-//         <button
-//           type="button"
-//           className="counter"
-//           onClick={() => setCount((count) => count + 1)}
-//         >
-//           Count is {count}
-//         </button>
-//       </section>
-
-//       <div className="ticks"></div>
-
-//       <section id="next-steps">
-//         <div id="docs">
-//           <svg className="icon" role="presentation" aria-hidden="true">
-//             <use href="/icons.svg#documentation-icon"></use>
-//           </svg>
-//           <h2>Documentation</h2>
-//           <p>Your questions, answered</p>
-//           <ul>
-//             <li>
-//               <a href="https://vite.dev/" target="_blank">
-//                 <img className="logo" src={viteLogo} alt="" />
-//                 Explore Vite
-//               </a>
-//             </li>
-//             <li>
-//               <a href="https://react.dev/" target="_blank">
-//                 <img className="button-icon" src={reactLogo} alt="" />
-//                 Learn more
-//               </a>
-//             </li>
-//           </ul>
-//         </div>
-//         <div id="social">
-//           <svg className="icon" role="presentation" aria-hidden="true">
-//             <use href="/icons.svg#social-icon"></use>
-//           </svg>
-//           <h2>Connect with us</h2>
-//           <p>Join the Vite community</p>
-//           <ul>
-//             <li>
-//               <a href="https://github.com/vitejs/vite" target="_blank">
-//                 <svg
-//                   className="button-icon"
-//                   role="presentation"
-//                   aria-hidden="true"
-//                 >
-//                   <use href="/icons.svg#github-icon"></use>
-//                 </svg>
-//                 GitHub
-//               </a>
-//             </li>
-//             <li>
-//               <a href="https://chat.vite.dev/" target="_blank">
-//                 <svg
-//                   className="button-icon"
-//                   role="presentation"
-//                   aria-hidden="true"
-//                 >
-//                   <use href="/icons.svg#discord-icon"></use>
-//                 </svg>
-//                 Discord
-//               </a>
-//             </li>
-//             <li>
-//               <a href="https://x.com/vite_js" target="_blank">
-//                 <svg
-//                   className="button-icon"
-//                   role="presentation"
-//                   aria-hidden="true"
-//                 >
-//                   <use href="/icons.svg#x-icon"></use>
-//                 </svg>
-//                 X.com
-//               </a>
-//             </li>
-//             <li>
-//               <a href="https://bsky.app/profile/vite.dev" target="_blank">
-//                 <svg
-//                   className="button-icon"
-//                   role="presentation"
-//                   aria-hidden="true"
-//                 >
-//                   <use href="/icons.svg#bluesky-icon"></use>
-//                 </svg>
-//                 Bluesky
-//               </a>
-//             </li>
-//           </ul>
-//         </div>
-//       </section>
-
-//       <div className="ticks"></div>
-//       <section id="spacer"></section>
-//     </>
-//   )
-// }
-
-// export default App
