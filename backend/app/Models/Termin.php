@@ -12,7 +12,7 @@ class Termin extends Model
     use HasFactory;
 
     // Status penagihan
-    public const STATUS_BELUM_SIAP = 'Belum Siap';
+    public const STATUS_BELUM_SIAP = 'Belum siap';
 
     public const STATUS_SIAP_SERAH = 'Siap serah';
 
