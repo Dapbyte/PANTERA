@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ArchiveController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\EarlyWarningController;
 use App\Http\Controllers\Api\KendalaController;
 use App\Http\Controllers\Api\ProgressController;
@@ -56,12 +57,14 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/projects/{id_proyek}/early-warning', [EarlyWarningController::class, 'show'])->whereNumber('id_proyek');
+    // Pembacaan: semua peran terautentikasi
     Route::get('/projects/{id_proyek}/progress', [ProgressController::class, 'index'])->whereNumber('id_proyek');
     Route::get('/projects/{id_proyek}/kendala', [KendalaController::class, 'index'])->whereNumber('id_proyek');
+    Route::get('/projects/{id_proyek}/early-warning', [EarlyWarningController::class, 'show'])->whereNumber('id_proyek');
     Route::get('/projects/{id_proyek}/termin', [TerminController::class, 'index'])->whereNumber('id_proyek');
     Route::get('/termin/{id_termin}/checklist', [TerminController::class, 'checklist'])->whereNumber('id_termin');
 
+    // Operasional lapangan & checklist dokumen: Admin Lapangan
     Route::middleware('role:AdminLapangan')->group(function () {
         Route::post('/projects/{id_proyek}/progress', [ProgressController::class, 'store'])->whereNumber('id_proyek');
         Route::post('/projects/{id_proyek}/kendala', [KendalaController::class, 'store'])->whereNumber('id_proyek');
@@ -71,8 +74,14 @@ Route::middleware('auth:sanctum')->group(function () {
             ->whereNumber(['id_termin', 'id_dokumen']);
     });
 
-    Route::middleware('role:SekretarisKeuangan')->group(function () {});
+    // Penagihan ke dinas & SP2D: Sekretaris/Keuangan
+    Route::middleware('role:SekretarisKeuangan')->group(function () {
+        Route::post('/termin/{id_termin}/ajukan', [BillingController::class, 'ajukan'])->whereNumber('id_termin');
+        Route::post('/termin/{id_termin}/koreksi', [BillingController::class, 'koreksi'])->whereNumber('id_termin');
+        Route::post('/termin/{id_termin}/sp2d', [BillingController::class, 'sp2d'])->whereNumber('id_termin');
+    });
 
+    // Portofolio early warning seluruh proyek: Direktur & Sekretaris/Keuangan
     Route::middleware('role:Direktur,SekretarisKeuangan')->group(function () {
         Route::get('/early-warning', [EarlyWarningController::class, 'index']);
     });
