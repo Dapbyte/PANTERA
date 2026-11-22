@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\EarlyWarningController;
 use App\Http\Controllers\Api\KendalaController;
 use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\TerminController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -58,11 +59,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/projects/{id_proyek}/early-warning', [EarlyWarningController::class, 'show'])->whereNumber('id_proyek');
     Route::get('/projects/{id_proyek}/progress', [ProgressController::class, 'index'])->whereNumber('id_proyek');
     Route::get('/projects/{id_proyek}/kendala', [KendalaController::class, 'index'])->whereNumber('id_proyek');
+    Route::get('/projects/{id_proyek}/termin', [TerminController::class, 'index'])->whereNumber('id_proyek');
+    Route::get('/termin/{id_termin}/checklist', [TerminController::class, 'checklist'])->whereNumber('id_termin');
 
     Route::middleware('role:AdminLapangan')->group(function () {
         Route::post('/projects/{id_proyek}/progress', [ProgressController::class, 'store'])->whereNumber('id_proyek');
         Route::post('/projects/{id_proyek}/kendala', [KendalaController::class, 'store'])->whereNumber('id_proyek');
         Route::patch('/kendala/{id_kendala}/resolve', [KendalaController::class, 'resolve'])->whereNumber('id_kendala');
+        Route::post('/termin/{id_termin}/dokumen', [TerminController::class, 'uploadDokumen'])->whereNumber('id_termin');
+        Route::patch('/termin/{id_termin}/dokumen/{id_dokumen}/verifikasi', [TerminController::class, 'verifikasiDokumen'])
+            ->whereNumber(['id_termin', 'id_dokumen']);
     });
 
     Route::middleware('role:SekretarisKeuangan')->group(function () {});
