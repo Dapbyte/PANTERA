@@ -11,6 +11,15 @@ class Termin extends Model
 {
     use HasFactory;
 
+    // Status penagihan
+    public const STATUS_BELUM_SIAP = 'Belum siap';
+
+    public const STATUS_SIAP_SERAH = 'Siap serah';
+
+    public const STATUS_DIAJUKAN = 'Diajukan ke Dinas';
+
+    public const STATUS_SP2D_CAIR = 'SP2D cair';
+
     protected $table = 'termin';
 
     protected $primaryKey = 'id_termin';
@@ -27,6 +36,7 @@ class Termin extends Model
         'nomor_surat_serah',
         'nomor_sp2d',
         'tanggal_cair',
+        'catatan_koreksi_dinas',
     ];
 
     protected function casts(): array
