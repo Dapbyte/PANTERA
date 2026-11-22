@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ArchiveController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\EarlyWarningController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -49,4 +50,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/archive', [ArchiveController::class, 'store']);
     Route::get('/archive/{id_arsip}', [ArchiveController::class, 'show']);
     Route::delete('/archive/{id_arsip}', [ArchiveController::class, 'destroy']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/projects/{id_proyek}/early-warning', [EarlyWarningController::class, 'show'])->whereNumber('id_proyek');
+
+    Route::middleware('role:AdminLapangan')->group(function () {});
+
+    Route::middleware('role:SekretarisKeuangan')->group(function () {});
+
+    Route::middleware('role:Direktur,SekretarisKeuangan')->group(function () {
+        Route::get('/early-warning', [EarlyWarningController::class, 'index']);
+    });
 });
