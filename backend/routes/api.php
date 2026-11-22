@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ArchiveController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EarlyWarningController;
+use App\Http\Controllers\Api\KendalaController;
 use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\UserController;
@@ -56,9 +57,12 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/projects/{id_proyek}/early-warning', [EarlyWarningController::class, 'show'])->whereNumber('id_proyek');
     Route::get('/projects/{id_proyek}/progress', [ProgressController::class, 'index'])->whereNumber('id_proyek');
+    Route::get('/projects/{id_proyek}/kendala', [KendalaController::class, 'index'])->whereNumber('id_proyek');
 
     Route::middleware('role:AdminLapangan')->group(function () {
         Route::post('/projects/{id_proyek}/progress', [ProgressController::class, 'store'])->whereNumber('id_proyek');
+        Route::post('/projects/{id_proyek}/kendala', [KendalaController::class, 'store'])->whereNumber('id_proyek');
+        Route::patch('/kendala/{id_kendala}/resolve', [KendalaController::class, 'resolve'])->whereNumber('id_kendala');
     });
 
     Route::middleware('role:SekretarisKeuangan')->group(function () {});
