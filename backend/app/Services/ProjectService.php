@@ -72,7 +72,7 @@ class ProjectService
                     'target_persentase' => $item['target_persentase'],
                     'nilai_tagihan' => $item['nilai_tagihan'],
                     'tenggat_waktu' => $item['tenggat_waktu'],
-                    'status_penagihan' => 'Belum siap',
+                    'status_penagihan' => Termin::STATUS_BELUM_SIAP,
                     'estimasi_kerugian' => 0,
                 ]);
             }
