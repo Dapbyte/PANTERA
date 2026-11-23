@@ -88,7 +88,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-
 // Pengajuan material (UC-07)
 Route::middleware(['auth:sanctum', 'role:AdminLapangan'])->group(function () {
     Route::post('/material-requests', [MaterialController::class, 'store']);
@@ -100,10 +99,8 @@ Route::middleware(['auth:sanctum', 'role:SekretarisKeuangan'])->group(function (
         ->whereNumber('id_request');
 });
 
-
 // Persetujuan pengajuan material oleh Direktur (UC-01)
 Route::middleware(['auth:sanctum', 'role:Direktur'])->group(function () {
     Route::patch('/material-requests/{id_request}/approve', [MaterialController::class, 'approve'])
         ->whereNumber('id_request');
 });
-

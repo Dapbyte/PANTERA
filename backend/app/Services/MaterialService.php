@@ -13,7 +13,7 @@ class MaterialService
         return DB::transaction(function () use ($data, $idPengaju) {
             // Buat pengajuan utama
             $request = RequestMaterial::create([
-                'no_request' => 'REQ-' . Str::uuid(),
+                'no_request' => 'REQ-'.Str::uuid(),
                 'id_proyek' => $data['id_proyek'],
                 'id_pengaju' => $idPengaju,
                 'tanggal_pengajuan' => now(),
