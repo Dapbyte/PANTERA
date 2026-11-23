@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LoginPage } from './pages/LoginPage';
-import { AppLayout, type UserRole, type ActiveTab } from './components/layout/AppLayout';
+import type { AuthAccount } from './lib/auth';
+import { AppLayout, type ActiveTab } from './components/layout/AppLayout';
 
 // Halaman Direktur
 import { DirekturBerandaPage } from './pages/direktur/DirekturBerandaPage';
@@ -26,8 +27,8 @@ import { initialProyekTerminList } from './mock/sekretarisData';
 import type { ArsipItem } from './types/direktur';
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [role, setRole] = useState<UserRole>('admin_lapangan');
+  // Sesi login: tiap peran memiliki akun sendiri (direktur, sekretaris, proyek).
+  const [account, setAccount] = useState<AuthAccount | null>(null);
   const [currentTab, setCurrentTab] = useState<ActiveTab>('beranda');
 
   // State navigasi detail
@@ -49,8 +50,14 @@ export default function App() {
     resetNavigation();
   };
 
-  const handleSwitchRole = (newRole: UserRole) => {
-    setRole(newRole);
+  const handleLoginSuccess = (loggedIn: AuthAccount) => {
+    setAccount(loggedIn);
+    setCurrentTab('beranda');
+    resetNavigation();
+  };
+
+  const handleLogout = () => {
+    setAccount(null);
     setCurrentTab('beranda');
     resetNavigation();
   };
@@ -77,10 +84,11 @@ export default function App() {
     );
   };
 
-  if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />;
+  if (!account) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
+  const role = account.role;
   const selectedPengajuan = pengajuanList.find((p) => p.id === selectedPengajuanId);
 
   return (
@@ -88,8 +96,7 @@ export default function App() {
       role={role}
       currentTab={currentTab}
       onSelectTab={handleSelectTab}
-      onSwitchRole={handleSwitchRole}
-      onLogout={() => setIsAuthenticated(false)}
+      onLogout={handleLogout}
     >
       {/* VIEW: ROLE DIREKTUR */}
       {role === 'direktur' &&

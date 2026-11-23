@@ -1,19 +1,41 @@
 import React, { useState } from 'react';
 import { PanteraLogo } from '../components/common/PanteraLogo';
-import { Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import { authAccounts, authenticate, type AuthAccount } from '../lib/auth';
 
 interface LoginPageProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (account: AuthAccount) => void;
 }
+
+const demoHints = [
+  { role: 'Direktur', username: 'direktur', password: 'direktur123' },
+  { role: 'Sekretaris & Keuangan', username: 'sekretaris', password: 'sekretaris123' },
+  { role: 'Admin Proyek', username: 'proyek', password: 'proyek123' },
+];
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onLoginSuccess();
+    const account = authenticate(username, password);
+
+    if (!account) {
+      setError('Username atau password salah. Periksa kembali akun Anda.');
+      return;
+    }
+
+    setError(null);
+    onLoginSuccess(account);
+  };
+
+  const fillCredentials = (account: (typeof authAccounts)[number]) => {
+    setUsername(account.username);
+    setPassword(account.password);
+    setError(null);
   };
 
   return (
@@ -49,7 +71,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               id="username"
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                setError(null);
+              }}
               className="w-full border-b border-slate-300 bg-transparent py-2 text-sm text-slate-800 transition placeholder:text-slate-400 focus:border-[#1877F2] focus:outline-none"
               placeholder="Masukkan username"
               autoComplete="username"
@@ -66,7 +91,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError(null);
+                }}
                 className="w-full border-b border-slate-300 bg-transparent py-2 pr-10 text-sm text-slate-800 transition placeholder:text-slate-400 focus:border-[#1877F2] focus:outline-none"
                 placeholder="Masukkan password"
                 autoComplete="current-password"
@@ -95,6 +123,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
+          {error && (
+            <div
+              role="alert"
+              className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-medium text-rose-700"
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
           <button
             type="submit"
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1877F2] px-6 py-3.5 font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:bg-blue-600 active:scale-[0.99] cursor-pointer"
@@ -104,7 +142,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           </button>
         </form>
 
-        <div className="mt-7 flex items-center justify-center gap-1.5 border-t border-dashed border-slate-200 pt-4 text-[11px] text-slate-400">
+        <div className="mt-7 border-t border-dashed border-slate-200 pt-4">
+          <div className="mb-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            Akun demo per peran
+          </div>
+          <div className="space-y-1">
+            {demoHints.map((hint) => (
+              <button
+                key={hint.username}
+                type="button"
+                onClick={() => {
+                  const account = authAccounts.find((a) => a.username === hint.username);
+                  if (account) fillCredentials(account);
+                }}
+                className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-left text-[11px] text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 cursor-pointer"
+              >
+                <span className="font-semibold text-slate-600">{hint.role}</span>
+                <span className="font-mono text-slate-400">
+                  {hint.username} / {hint.password}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-5 flex items-center justify-center gap-1.5 border-t border-dashed border-slate-200 pt-4 text-[11px] text-slate-400">
           <ShieldCheck className="h-3.5 w-3.5" />
           <span>Akses internal terbatas — PT. Djasipa Mitra Perkasa</span>
         </div>
