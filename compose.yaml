@@ -66,7 +66,7 @@ services:
         condition: service_healthy
 
     command: >
-      sh -c "composer install --no-interaction --prefer-dist && php -S 0.0.0.0:8000 -t public public/index.php"
+      sh -c "composer install --no-interaction --prefer-dist && php -S 0.0.0.0:8000 -t public public/router.php"
 
   # =====================================
   # REACT + VITE FRONTEND
