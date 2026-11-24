@@ -20,18 +20,21 @@ beforeEach(function () {
 
 afterEach(fn () => Carbon::setTestNow());
 
-/** Admin lapangan melengkapi & memverifikasi 4 dokumen => termin 'Siap serah'. */
+/** Admin lapangan mengunggah 4 dokumen, lalu Keuangan memverifikasi => termin 'Siap serah'. */
 function siapkanTerminSiapSerah($test): void
 {
+    $ids = [];
     Sanctum::actingAs(ProyekUji::user('AdminLapangan'));
     foreach (array_keys(config('pantera.dokumen_termin_wajib')) as $jenis) {
-        $id = $test->postJson("/api/termin/{$test->idTermin}/dokumen", [
+        $ids[] = $test->postJson("/api/termin/{$test->idTermin}/dokumen", [
             'jenis_dokumen' => $jenis,
             'file_dokumen' => UploadedFile::fake()->create("{$jenis}.pdf", 50, 'application/pdf'),
         ])->assertStatus(201)->json('data.dokumen.id_dokumen');
-        $test->patchJson("/api/termin/{$test->idTermin}/dokumen/{$id}/verifikasi", ['status_verifikasi' => true])->assertStatus(200);
     }
     Sanctum::actingAs(ProyekUji::user('SekretarisKeuangan'));
+    foreach ($ids as $id) {
+        $test->patchJson("/api/termin/{$test->idTermin}/dokumen/{$id}/verifikasi", ['status_verifikasi' => true])->assertStatus(200);
+    }
 }
 
 test('UC-06: alur lengkap Siap serah -> Diajukan ke Dinas -> SP2D cair', function () {
@@ -82,17 +85,17 @@ test('UC-06 A1: dinas mengembalikan berkas, dokumen ditandai revisi, lalu diajuk
     $dok = DokumenTermin::findOrFail($idDokumen);
     expect($dok->status_verifikasi)->toBeFalse()->and($dok->catatan_revisi)->toBe('Gunakan format BA terbaru');
 
-    // Admin memperbaiki: unggah ulang + verifikasi => Siap serah lagi
+    // Admin mengunggah ulang; Keuangan memverifikasi => Siap serah lagi
     Sanctum::actingAs(ProyekUji::user('AdminLapangan'));
     $this->postJson("/api/termin/{$this->idTermin}/dokumen", [
         'jenis_dokumen' => 'berita_acara',
         'file_dokumen' => UploadedFile::fake()->create('ba-baru.pdf', 50, 'application/pdf'),
     ])->assertStatus(201);
+    Sanctum::actingAs(ProyekUji::user('SekretarisKeuangan'));
     $this->patchJson("/api/termin/{$this->idTermin}/dokumen/{$idDokumen}/verifikasi", ['status_verifikasi' => true])->assertStatus(200);
     expect($this->termin->refresh()->status_penagihan)->toBe(Termin::STATUS_SIAP_SERAH);
 
     // Diajukan ulang dengan surat baru; catatan koreksi dibersihkan
-    Sanctum::actingAs(ProyekUji::user('SekretarisKeuangan'));
     $this->postJson("/api/termin/{$this->idTermin}/ajukan", ['nomor_surat_serah' => 'A-2'])
         ->assertStatus(200)
         ->assertJsonPath('data.status_penagihan', 'Diajukan ke Dinas')

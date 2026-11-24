@@ -218,6 +218,7 @@ test('UC-11: pencatatan arsip hibrida sukses menyimpan koordinat fisik dan file 
         'tanggal_selesai' => '2026-07-31',
         'status_proyek' => 'Aktif',
     ]);
+    $proyek->adminLapanganAkses()->attach($lapangan->id_pengguna);
 
     $requestMaterial = RequestMaterial::create([
         'no_request' => 'REQ-MAT-99',
@@ -226,7 +227,7 @@ test('UC-11: pencatatan arsip hibrida sukses menyimpan koordinat fisik dan file 
         'tanggal_pengajuan' => '2026-02-15',
         'sifat_pengajuan' => 'Darurat',
         'total_estimasi' => 75000000.00,
-        'status_approval' => 'TervalidasiKeuangan',
+        'status_approval' => 'Menunggu Direktur',
     ]);
 
     $file = UploadedFile::fake()->create('berita_acara.pdf', 300, 'application/pdf');
@@ -310,11 +311,16 @@ test('UC-02 & SD-07: pencarian arsip berhasil (200) dan mengembalikan 404 saat t
             'message' => 'Daftar arsip berhasil dimuat.',
         ]);
 
-    // 2. Sesuai SD-07: Pencarian tidak ditemukan (404 Not Found)
+    // 2. Pencarian tidak ditemukan tetap mengembalikan 200 OK dengan items kosong (zero console 404)
     $resNotFound = $this->getJson('/api/archive/search?q=DokumenPalsuYangTidakAdaSamaSekali');
-    $resNotFound->assertStatus(404)
+    $resNotFound->assertStatus(200)
         ->assertJson([
-            'status' => 'error',
-            'message' => 'Arsip tidak ditemukan di repositori.',
+            'status' => 'success',
+            'data' => [
+                'items' => [],
+                'meta' => [
+                    'total' => 0,
+                ],
+            ],
         ]);
 });

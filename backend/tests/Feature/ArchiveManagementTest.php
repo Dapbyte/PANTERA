@@ -20,7 +20,6 @@ test('pengguna dapat mencatat arsip hibrida dengan koordinat fisik dan file digi
     $lapangan = User::where('email', 'lapangan@pantera.id')->first();
     Sanctum::actingAs($lapangan);
 
-    // Buat dummy proyek untuk relasi arsip
     $direktur = User::where('email', 'direktur@pantera.id')->first();
     $proyek = Proyek::create([
         'id_pembuat' => $direktur->id_pengguna,
@@ -32,6 +31,7 @@ test('pengguna dapat mencatat arsip hibrida dengan koordinat fisik dan file digi
         'tanggal_selesai' => '2026-06-30',
         'status_proyek' => 'Aktif',
     ]);
+    $proyek->adminLapanganAkses()->attach($lapangan->id_pengguna);
 
     $file = UploadedFile::fake()->create('dokumen_kontrak.pdf', 500, 'application/pdf');
 
@@ -81,6 +81,9 @@ test('pengguna dapat mencatat arsip hibrida dengan koordinat fisik dan file digi
         'nomor_binder' => 'B-01',
         'ruang_simpan' => 'Gudang Arsip Lantai 2',
     ]);
+
+    $idArsip = $response->json('data.arsip.id_arsip');
+    $this->get("/api/archive/{$idArsip}/file")->assertOk();
 });
 
 test('pencatatan arsip dapat menautkan referensi silang ke request material', function () {
@@ -98,6 +101,7 @@ test('pencatatan arsip dapat menautkan referensi silang ke request material', fu
         'tanggal_selesai' => '2026-05-31',
         'status_proyek' => 'Aktif',
     ]);
+    $proyek->adminLapanganAkses()->attach($lapangan->id_pengguna);
 
     $requestMaterial = RequestMaterial::create([
         'no_request' => 'REQ-001',
@@ -105,8 +109,8 @@ test('pencatatan arsip dapat menautkan referensi silang ke request material', fu
         'id_pengaju' => $lapangan->id_pengguna,
         'tanggal_pengajuan' => '2026-02-10',
         'sifat_pengajuan' => 'Rutin',
-        'total_estimasi' => 50000000.00,
-        'status_approval' => 'Pending',
+        'total_estimasi' => null,
+        'status_approval' => RequestMaterial::STATUS_DIAJUKAN,
     ]);
 
     $payload = [
@@ -115,7 +119,7 @@ test('pencatatan arsip dapat menautkan referensi silang ke request material', fu
         'jenis_transaksi' => 'Pembelian Pasir & Semen',
         'pihak_penyedia' => 'TB Berkah Mandiri',
         'judul_dokumen' => 'Kuitansi Pembelian Semen 100 Sak',
-        'jenis_arsip' => 'Kuitansi',
+        'jenis_arsip' => 'Kwitansi',
         'tanggal_arsip' => '2026-02-12',
         'tipe_penyimpanan' => 'Fisik',
         'nomor_binder' => 'B-02',
@@ -134,9 +138,9 @@ test('pencatatan arsip dapat menautkan referensi silang ke request material', fu
     ]);
 });
 
-test('pencarian arsip berhasil menemukan dokumen yang cocok (UC-02 & SD-07)', function () {
-    $lapangan = User::where('email', 'lapangan@pantera.id')->first();
-    Sanctum::actingAs($lapangan);
+test('pencarian arsip mengembalikan pagination items dan meta (200 OK walau hasil kosong)', function () {
+    $keuangan = User::where('email', 'keuangan@pantera.id')->first();
+    Sanctum::actingAs($keuangan);
 
     $direktur = User::where('email', 'direktur@pantera.id')->first();
     $proyek = Proyek::create([
@@ -164,38 +168,63 @@ test('pencarian arsip berhasil menemukan dokumen yang cocok (UC-02 & SD-07)', fu
         'ruang_simpan' => 'Lantai 1',
     ])->assertStatus(201);
 
-    // Pencarian kata kunci 'Citarum'
-    $response = $this->getJson('/api/archive/search?q=Citarum');
+    // Pencarian kata kunci 'Citarum' dan filter ruang simpan
+    $response = $this->getJson('/api/archive/search?q=Citarum&lokasi_fisik=Lantai&sort=terlama&per_page=10');
 
     $response->assertOk()
-        ->assertJson([
-            'status' => 'success',
-            'message' => 'Daftar arsip berhasil dimuat.',
-        ])
+        ->assertJsonPath('status', 'success')
+        ->assertJsonPath('data.meta.total', 1)
         ->assertJsonStructure([
             'data' => [
-                '*' => [
-                    'id_arsip',
-                    'kode_arsip',
-                    'judul_dokumen',
-                    'lokasi_arsip_fisik',
-                    'proyek',
+                'items' => [
+                    '*' => [
+                        'id_arsip',
+                        'kode_arsip',
+                        'nomor_surat',
+                        'judul_dokumen',
+                        'lokasi_arsip_fisik',
+                        'proyek',
+                    ],
                 ],
+                'meta' => ['current_page', 'last_page', 'per_page', 'total'],
             ],
         ]);
+
+    // Pencarian kosong mengembalikan 200 dengan items: [] (bukan 404 agar bebas error console)
+    $this->getJson('/api/archive?q=KataKunciYangTidakPernahAda123456')
+        ->assertStatus(200)
+        ->assertJsonPath('data.meta.total', 0)
+        ->assertJsonCount(0, 'data.items');
 });
 
-test('pencarian arsip mengembalikan 404 jika dokumen tidak ditemukan di repositori (SD-07)', function () {
+test('ARS-10 & ARS-11: Digital/Hibrida wajib file dan tanggal di luar rentang wajar ditolak 422', function () {
     $keuangan = User::where('email', 'keuangan@pantera.id')->first();
     Sanctum::actingAs($keuangan);
 
-    $response = $this->getJson('/api/archive/search?q=KataKunciYangTidakPernahAda123456');
+    $direktur = User::where('email', 'direktur@pantera.id')->first();
+    $proyek = Proyek::create([
+        'id_pembuat' => $direktur->id_pengguna,
+        'kode_proyek' => 'P004',
+        'nama_proyek' => 'Validasi Arsip Test',
+        'dinas_pemberi_kerja' => 'Dinkes',
+        'nilai_kontrak' => 150000000.00,
+        'tanggal_mulai' => '2026-01-01',
+        'tanggal_selesai' => '2026-03-31',
+        'status_proyek' => 'Aktif',
+    ]);
 
-    $response->assertStatus(404)
-        ->assertJson([
-            'status' => 'error',
-            'message' => 'Arsip tidak ditemukan di repositori.',
-        ]);
+    // Tanpa file untuk Digital Murni -> 422
+    $this->postJson('/api/archive', [
+        'id_proyek' => $proyek->id_proyek,
+        'nomor_surat' => 'DGT-001',
+        'jenis_transaksi' => 'Administrasi',
+        'pihak_penyedia' => 'Vendor A',
+        'judul_dokumen' => 'Dokumen Tanpa File',
+        'jenis_arsip' => 'Surat',
+        'tanggal_arsip' => '0012-12-12',
+        'tipe_penyimpanan' => 'Digital',
+    ])->assertStatus(422)
+        ->assertJsonValidationErrors(['file_dokumen', 'tanggal_arsip'], 'errors');
 });
 
 test('detail arsip dapat dilihat dan dihapus secara cascade', function () {
@@ -204,7 +233,7 @@ test('detail arsip dapat dilihat dan dihapus secara cascade', function () {
 
     $proyek = Proyek::create([
         'id_pembuat' => $direktur->id_pengguna,
-        'kode_proyek' => 'P004',
+        'kode_proyek' => 'P005',
         'nama_proyek' => 'Puskesmas Jonggol',
         'dinas_pemberi_kerja' => 'Dinkes',
         'nilai_kontrak' => 150000000.00,
@@ -229,9 +258,8 @@ test('detail arsip dapat dilihat dan dihapus secara cascade', function () {
 
     $idArsip = $createRes->json('data.arsip.id_arsip');
 
-    // Cek detail
-    $detailRes = $this->getJson("/api/archive/{$idArsip}");
-    $detailRes->assertOk()
+    $this->getJson("/api/archive/{$idArsip}")
+        ->assertOk()
         ->assertJson([
             'status' => 'success',
             'data' => [
@@ -240,9 +268,8 @@ test('detail arsip dapat dilihat dan dihapus secara cascade', function () {
             ],
         ]);
 
-    // Hapus arsip
-    $deleteRes = $this->deleteJson("/api/archive/{$idArsip}");
-    $deleteRes->assertOk()
+    $this->deleteJson("/api/archive/{$idArsip}")
+        ->assertOk()
         ->assertJson([
             'status' => 'success',
             'message' => 'Dokumen arsip berhasil dihapus.',

@@ -162,7 +162,9 @@ test('semua peran terautentikasi dapat melihat katalog daftar proyek', function 
     $direktur = User::where('email', 'direktur@pantera.id')->first();
     Sanctum::actingAs($direktur);
 
-    // Buat 1 proyek terlebih dahulu
+    $lapangan = User::where('email', 'lapangan@pantera.id')->first();
+
+    // Buat 1 proyek terlebih dahulu dan berikan akses ke Admin Lapangan
     $this->postJson('/api/projects', [
         'nama_proyek' => 'Renovasi Puskesmas Sentul',
         'dinas_pemberi_kerja' => 'Dinas Kesehatan',
@@ -170,6 +172,7 @@ test('semua peran terautentikasi dapat melihat katalog daftar proyek', function 
         'tanggal_mulai' => '2026-01-01',
         'tanggal_selesai' => '2026-04-30',
         'total_pagu' => 270000000.00,
+        'admin_lapangan_ids' => [(int) $lapangan->id_pengguna],
         'termin' => [
             [
                 'nomor_termin' => 1,
@@ -181,7 +184,6 @@ test('semua peran terautentikasi dapat melihat katalog daftar proyek', function 
     ])->assertStatus(201);
 
     // Login sebagai Admin Lapangan dan akses katalog proyek
-    $lapangan = User::where('email', 'lapangan@pantera.id')->first();
     Sanctum::actingAs($lapangan);
 
     $response = $this->getJson('/api/projects?q=Sentul');

@@ -7,18 +7,15 @@ use App\Models\User;
 use App\Services\ProjectService;
 
 /**
- * Helper data uji: proyek dengan 3 termin kumulatif (30% / 70% / 100%).
- *
- *   mulai 2026-01-01
- *   Termin 1: target 30%,  tenggat 2026-03-31, tagihan Rp300.000.000
- *   Termin 2: target 70%,  tenggat 2026-07-31, tagihan Rp400.000.000
- *   Termin 3: target 100%, tenggat 2026-12-31, tagihan Rp300.000.000
+ * Helper data uji: proyek dengan 3 termin kumulatif (30% / 70% / 100%)
+ * dan menautkan akses Admin Lapangan default sesuai aturan GLB-14.
  */
 class ProyekUji
 {
     public static function buat(): Proyek
     {
         $direktur = User::where('email', 'direktur@pantera.id')->firstOrFail();
+        $lapangan = User::where('email', 'lapangan@pantera.id')->firstOrFail();
 
         return app(ProjectService::class)->createProject([
             'nama_proyek' => 'Pembangunan Jembatan Uji',
@@ -27,6 +24,7 @@ class ProyekUji
             'tanggal_mulai' => '2026-01-01',
             'tanggal_selesai' => '2026-12-31',
             'total_pagu' => 900000000,
+            'admin_lapangan_ids' => [(int) $lapangan->id_pengguna],
             'termin' => [
                 ['nomor_termin' => 1, 'target_persentase' => 30, 'nilai_tagihan' => 300000000, 'tenggat_waktu' => '2026-03-31'],
                 ['nomor_termin' => 2, 'target_persentase' => 70, 'nilai_tagihan' => 400000000, 'tenggat_waktu' => '2026-07-31'],

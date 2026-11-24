@@ -38,8 +38,13 @@ function verifikasi($test, int $idDokumen, bool $ok = true, ?string $catatan = n
 
 function lengkapiChecklist($test): void
 {
+    $ids = [];
+    Sanctum::actingAs(ProyekUji::user('AdminLapangan'));
     foreach (array_keys(config('pantera.dokumen_termin_wajib')) as $jenis) {
-        $id = unggah($test, $jenis)->assertStatus(201)->json('data.dokumen.id_dokumen');
+        $ids[] = unggah($test, $jenis)->assertStatus(201)->json('data.dokumen.id_dokumen');
+    }
+    Sanctum::actingAs(ProyekUji::user('SekretarisKeuangan'));
+    foreach ($ids as $id) {
         verifikasi($test, $id)->assertStatus(200);
     }
 }
@@ -68,12 +73,14 @@ test('UC-10: unggah dokumen menyimpan file dan belum terverifikasi', function ()
     Storage::disk('public')->assertExists(DokumenTermin::firstOrFail()->path_file);
 });
 
-test('UC-10: status menjadi Siap serah saat 4 dokumen lengkap & terverifikasi, kembali Belum siap jika dicabut', function () {
+test('UC-10: status menjadi Siap serah saat 4 dokumen lengkap & terverifikasi Keuangan, kembali Belum siap jika dicabut', function () {
     $jenis = array_keys(config('pantera.dokumen_termin_wajib'));
     $ids = [];
     foreach ($jenis as $j) {
         $ids[$j] = unggah($this, $j)->assertStatus(201)->json('data.dokumen.id_dokumen');
     }
+
+    Sanctum::actingAs(ProyekUji::user('SekretarisKeuangan'));
 
     // 3 dari 4 terverifikasi => belum siap
     foreach (array_slice($ids, 0, 3, true) as $id) {
@@ -99,9 +106,11 @@ test('UC-10: status menjadi Siap serah saat 4 dokumen lengkap & terverifikasi, k
 
 test('UC-10: mengunggah ulang jenis yang sama mengganti file dan mereset verifikasi', function () {
     $id = unggah($this, 'foto_progres')->json('data.dokumen.id_dokumen');
+    Sanctum::actingAs(ProyekUji::user('SekretarisKeuangan'));
     verifikasi($this, $id)->assertStatus(200);
     $pathLama = DokumenTermin::findOrFail($id)->path_file;
 
+    Sanctum::actingAs(ProyekUji::user('AdminLapangan'));
     unggah($this, 'foto_progres')->assertStatus(201)
         ->assertJsonPath('data.dokumen.id_dokumen', $id)
         ->assertJsonPath('data.dokumen.status_verifikasi', false);
@@ -151,8 +160,11 @@ test('UC-10: dokumen terkunci setelah termin diajukan ke dinas', function () {
     lengkapiChecklist($this);
     $this->termin->update(['status_penagihan' => Termin::STATUS_DIAJUKAN]);
 
+    Sanctum::actingAs(ProyekUji::user('AdminLapangan'));
     unggah($this, 'laporan_mingguan')->assertStatus(422)
         ->assertJsonValidationErrors('status_penagihan', 'errors');
+
+    Sanctum::actingAs(ProyekUji::user('SekretarisKeuangan'));
     verifikasi($this, DokumenTermin::first()->id_dokumen, false, 'x')->assertStatus(422);
 });
 
@@ -168,20 +180,26 @@ test('UC-10: ringkasan daftar termin proyek memuat checklist tiap termin', funct
         ->assertJsonPath('data.1.checklist.terverifikasi', 0);
 });
 
-test('RBAC & 404: hanya admin lapangan mengelola dokumen; dokumen harus milik termin', function () {
+test('RBAC & 404: Admin Lapangan unggah dokumen, Keuangan verifikasi dokumen, Direktur baca saja', function () {
     $idDok = unggah($this, 'laporan_mingguan')->json('data.dokumen.id_dokumen');
     $termin2 = $this->proyek->termin()->where('nomor_termin', 2)->first();
 
-    foreach (['Direktur', 'SekretarisKeuangan'] as $peran) {
-        Sanctum::actingAs(ProyekUji::user($peran));
-        unggah($this, 'berita_acara')->assertStatus(403);
-        verifikasi($this, $idDok)->assertStatus(403);
-        $this->getJson("/api/termin/{$this->termin->id_termin}/checklist")->assertStatus(200);   // baca boleh
-    }
-
-    Sanctum::actingAs(ProyekUji::user('AdminLapangan'));
+    // Admin Lapangan tidak boleh memverifikasi dokumen sendiri
+    verifikasi($this, $idDok)->assertStatus(403);
     unggah($this, 'berita_acara', 9999)->assertStatus(404);
     $this->getJson('/api/termin/9999/checklist')->assertStatus(404);
+
+    // Direktur hanya baca checklist (403 untuk upload & verify)
+    Sanctum::actingAs(ProyekUji::user('Direktur'));
+    unggah($this, 'berita_acara')->assertStatus(403);
+    verifikasi($this, $idDok)->assertStatus(403);
+    $this->getJson("/api/termin/{$this->termin->id_termin}/checklist")->assertStatus(200);
+
+    // Keuangan memverifikasi dokumen tetapi tidak mengunggah
+    Sanctum::actingAs(ProyekUji::user('SekretarisKeuangan'));
+    unggah($this, 'berita_acara')->assertStatus(403);
+    verifikasi($this, $idDok)->assertStatus(200);
+    $this->getJson("/api/termin/{$this->termin->id_termin}/checklist")->assertStatus(200);
     $this->patchJson("/api/termin/{$termin2->id_termin}/dokumen/{$idDok}/verifikasi", ['status_verifikasi' => true])
         ->assertStatus(404)->assertJsonPath('message', 'Dokumen tidak ditemukan pada termin ini.');
 });
