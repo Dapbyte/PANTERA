@@ -1,38 +1,38 @@
 import { api } from '../lib/api';
 import type {
   ApiResponse,
+  ProjectDetailResponse,
   ProjectListFilters,
+  ProjectListItem,
   Proyek,
   StoreProyekPayload,
+  UpdateProyekPayload,
 } from '../types/api';
 
 export const projectService = {
-  /**
-   * Mengambil katalog seluruh proyek dengan filter pencarian dan status.
-   */
-  async getProjects(filters?: ProjectListFilters): Promise<Proyek[]> {
-    const response = await api.get<ApiResponse<Proyek[]>>('/projects', {
+  async getProjects(filters?: ProjectListFilters): Promise<ProjectListItem[]> {
+    const response = await api.get<ApiResponse<ProjectListItem[]>>('/projects', {
       params: filters,
     });
     return response.data.data;
   },
 
-  /**
-   * Mengambil detail lengkap proyek berdasarkan ID (termasuk RAB dan Termin).
-   */
-  async getProjectDetail(idProyek: number): Promise<Proyek> {
-    const response = await api.get<ApiResponse<Proyek>>(`/projects/${idProyek}`);
+  async getProjectDetail(idProyek: number): Promise<ProjectDetailResponse> {
+    const response = await api.get<ApiResponse<ProjectDetailResponse>>(`/projects/${idProyek}`);
     return response.data.data;
   },
 
-  /**
-   * Membuat proyek baru beserta RAB dan tahapan Termin (UC-12 & SD-08).
-   * Khusus akun dengan peran Direktur.
-   *
-   * @throws AxiosError jika validasi bisnis gagal (misal: total termin != nilai kontrak)
-   */
   async createProject(payload: StoreProyekPayload): Promise<Proyek> {
     const response = await api.post<ApiResponse<Proyek>>('/projects', payload);
     return response.data.data;
+  },
+
+  async updateProject(idProyek: number, payload: UpdateProyekPayload): Promise<Proyek> {
+    const response = await api.put<ApiResponse<Proyek>>(`/projects/${idProyek}`, payload);
+    return response.data.data;
+  },
+
+  async deleteProject(idProyek: number): Promise<void> {
+    await api.delete<ApiResponse<null>>(`/projects/${idProyek}`);
   },
 };

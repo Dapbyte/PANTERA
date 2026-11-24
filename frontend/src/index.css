@@ -53,6 +53,16 @@
 
   button {
     -webkit-tap-highlight-color: transparent;
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease,
+      box-shadow 150ms ease, transform 100ms ease, opacity 150ms ease;
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:not(:disabled):active {
+    transform: scale(0.98);
   }
 
   img,

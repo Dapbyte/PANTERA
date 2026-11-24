@@ -43,7 +43,7 @@ export const DirekturLayout: React.FC<DirekturLayoutProps> = ({
           {/* Nav Header */}
           <div className="pt-2">
             <div className="text-[11px] font-medium tracking-wider text-white/70 uppercase mb-2">
-              Main Menu
+              Navigasi
             </div>
             <div className="h-[1px] bg-white/20 mb-4" />
           </div>

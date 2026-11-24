@@ -1,4 +1,4 @@
-import type { UserRole } from '../components/layout/AppLayout';
+import type { UserRole } from '../types/api';
 
 export interface AuthAccount {
   username: string;
@@ -6,15 +6,10 @@ export interface AuthAccount {
   role: UserRole;
 }
 
-/**
- * Daftar akun demo untuk pemisahan akses per peran.
- * Setiap peran (Direktur, Sekretaris/Keuangan, Admin Proyek) memiliki
- * kredensial login sendiri dan tidak saling bertukar peran.
- */
 export const authAccounts: AuthAccount[] = [
-  { username: 'direktur', password: 'direktur123', role: 'direktur' },
-  { username: 'sekretaris', password: 'sekretaris123', role: 'sekretaris' },
-  { username: 'proyek', password: 'proyek123', role: 'admin_lapangan' },
+  { username: 'direktur@pantera.id', password: 'password123', role: 'Direktur' },
+  { username: 'keuangan@pantera.id', password: 'password123', role: 'SekretarisKeuangan' },
+  { username: 'lapangan@pantera.id', password: 'password123', role: 'AdminLapangan' },
 ];
 
 export function authenticate(rawUsername: string, password: string): AuthAccount | null {

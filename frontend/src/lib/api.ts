@@ -66,3 +66,25 @@ export const removeAuthToken = (): void => {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
 };
+
+export function extractApiError(error: unknown, fallback = 'Terjadi kesalahan pada sistem.'): string {
+  if (axios.isAxiosError<ApiResponse<unknown>>(error)) {
+    const errors = error.response?.data?.errors;
+    if (errors && typeof errors === 'object') {
+      const firstKey = Object.keys(errors)[0];
+      if (firstKey && Array.isArray(errors[firstKey]) && errors[firstKey].length > 0) {
+        return errors[firstKey][0];
+      }
+    }
+    if (error.response?.data?.message) {
+      return error.response.data.message;
+    }
+    if (error.message) {
+      return error.message;
+    }
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}

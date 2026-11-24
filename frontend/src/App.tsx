@@ -1,15 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { LoginPage } from './pages/LoginPage';
-import type { AuthAccount } from './lib/auth';
+import { authService, type NotificationModule, type User } from './services';
 import { AppLayout, type ActiveTab } from './components/layout/AppLayout';
+import { RealtimeSyncProvider } from './context/RealtimeSyncContext';
+import { useRealtimeSync } from './context/realtimeSyncStore';
+import { ForceChangePasswordModal, SkeletonDashboard } from './components/ui';
 
 // Halaman Direktur
 import { DirekturBerandaPage } from './pages/direktur/DirekturBerandaPage';
 import { DirekturDetailPage } from './pages/direktur/DirekturDetailPage';
+import { DirekturProyekPage } from './pages/direktur/DirekturProyekPage';
+import { DirekturUsersPage } from './pages/direktur/DirekturUsersPage';
 import { DirekturArsipPage } from './pages/direktur/DirekturArsipPage';
 
-// Halaman Sekretaris
+// Halaman Sekretaris / Keuangan
 import { SekretarisBerandaPage } from './pages/sekretaris/SekretarisBerandaPage';
+import { SekretarisValidasiPage } from './pages/sekretaris/SekretarisValidasiPage';
 import { SekretarisArsipPage } from './pages/sekretaris/SekretarisArsipPage';
 import { SekretarisTerminListPage } from './pages/sekretaris/SekretarisTerminListPage';
 import { SekretarisTerminDetailPage } from './pages/sekretaris/SekretarisTerminDetailPage';
@@ -21,24 +28,28 @@ import { AdminProyekDetailPage } from './pages/admin/AdminProyekDetailPage';
 import { AdminKendalaPage } from './pages/admin/AdminKendalaPage';
 import { AdminArsipPage } from './pages/admin/AdminArsipPage';
 
-// Mock Data
-import { initialPengajuanList, initialArsipList } from './mock/direkturData';
-import { initialProyekTerminList } from './mock/sekretarisData';
-import type { ArsipItem } from './types/direktur';
+interface AuthenticatedShellProps {
+  user: User;
+  currentTab: ActiveTab;
+  onSelectTab: (tab: ActiveTab) => void;
+  onUserUpdated: (user: User) => void;
+  onLogout: () => void;
+}
 
-export default function App() {
-  // Sesi login: tiap peran memiliki akun sendiri (direktur, sekretaris, proyek).
-  const [account, setAccount] = useState<AuthAccount | null>(null);
-  const [currentTab, setCurrentTab] = useState<ActiveTab>('beranda');
+function AuthenticatedShell({
+  user,
+  currentTab,
+  onSelectTab,
+  onUserUpdated,
+  onLogout,
+}: AuthenticatedShellProps) {
+  const [selectedPengajuanId, setSelectedPengajuanId] = useState<number | null>(null);
+  const [selectedProyekId, setSelectedProyekId] = useState<number | null>(null);
+  const { markTabSeen } = useRealtimeSync();
 
-  // State navigasi detail
-  const [selectedPengajuanId, setSelectedPengajuanId] = useState<string | null>(null);
-  const [selectedProyekId, setSelectedProyekId] = useState<string | null>(null);
-
-  // Data state
-  const [pengajuanList, setPengajuanList] = useState(initialPengajuanList);
-  const [arsipList, setArsipList] = useState(initialArsipList);
-  const [proyekList] = useState(initialProyekTerminList);
+  useEffect(() => {
+    void markTabSeen(currentTab as NotificationModule);
+  }, [currentTab, markTabSeen]);
 
   const resetNavigation = () => {
     setSelectedPengajuanId(null);
@@ -46,135 +57,161 @@ export default function App() {
   };
 
   const handleSelectTab = (tab: ActiveTab) => {
-    setCurrentTab(tab);
+    onSelectTab(tab);
     resetNavigation();
+    void markTabSeen(tab as NotificationModule);
   };
 
-  const handleLoginSuccess = (loggedIn: AuthAccount) => {
-    setAccount(loggedIn);
+  const role = user.peran;
+
+  return (
+    <>
+      {user.must_change_password && (
+        <ForceChangePasswordModal
+          user={user}
+          onSuccess={(updated) => onUserUpdated(updated)}
+          onLogout={onLogout}
+        />
+      )}
+
+      <AppLayout
+        user={user}
+        currentTab={currentTab}
+        onSelectTab={handleSelectTab}
+        onLogout={onLogout}
+      >
+        {/* VIEW: ROLE DIREKTUR */}
+        {role === 'Direktur' &&
+          (selectedPengajuanId !== null ? (
+            <DirekturDetailPage
+              idRequest={selectedPengajuanId}
+              onBack={() => setSelectedPengajuanId(null)}
+              onDecisionSuccess={() => setSelectedPengajuanId(null)}
+            />
+          ) : currentTab === 'beranda' ? (
+            <DirekturBerandaPage onSelectPengajuan={(id) => setSelectedPengajuanId(id)} />
+          ) : currentTab === 'proyek' ? (
+            <DirekturProyekPage />
+          ) : currentTab === 'users' ? (
+            <DirekturUsersPage currentUserId={user.id_pengguna} />
+          ) : (
+            <DirekturArsipPage />
+          ))}
+
+        {/* VIEW: ROLE SEKRETARIS DAN KEUANGAN */}
+        {role === 'SekretarisKeuangan' &&
+          (selectedPengajuanId !== null ? (
+            <SekretarisValidasiPage
+              idRequest={selectedPengajuanId}
+              onBack={() => setSelectedPengajuanId(null)}
+              onValidated={() => setSelectedPengajuanId(null)}
+            />
+          ) : currentTab === 'beranda' ? (
+            <SekretarisBerandaPage onSelectPengajuan={(id) => setSelectedPengajuanId(id)} />
+          ) : currentTab === 'arsip' ? (
+            <SekretarisArsipPage />
+          ) : currentTab === 'termin' ? (
+            selectedProyekId !== null ? (
+              <SekretarisTerminDetailPage
+                proyekId={selectedProyekId}
+                onBack={() => setSelectedProyekId(null)}
+                onOpenBankCoordination={() => handleSelectTab('contact')}
+              />
+            ) : (
+              <SekretarisTerminListPage onSelectProyek={(id) => setSelectedProyekId(id)} />
+            )
+          ) : (
+            <SekretarisContactPage />
+          ))}
+
+        {/* VIEW: ROLE ADMIN LAPANGAN */}
+        {role === 'AdminLapangan' &&
+          (currentTab === 'beranda' ? (
+            selectedProyekId !== null ? (
+              <AdminProyekDetailPage
+                proyekId={selectedProyekId}
+                onBack={() => setSelectedProyekId(null)}
+                onGoToKendala={() => handleSelectTab('kendala')}
+              />
+            ) : (
+              <AdminBerandaPage onSelectProyek={(id) => setSelectedProyekId(id)} />
+            )
+          ) : currentTab === 'kendala' ? (
+            <AdminKendalaPage />
+          ) : (
+            <AdminArsipPage />
+          ))}
+      </AppLayout>
+    </>
+  );
+}
+
+export default function App() {
+  const queryClient = useQueryClient();
+  const [user, setUser] = useState<User | null>(() => authService.getCurrentUser());
+  const [checkingSession, setCheckingSession] = useState(() => authService.isAuthenticated());
+  const [currentTab, setCurrentTab] = useState<ActiveTab>('beranda');
+
+  useEffect(() => {
+    if (!authService.isAuthenticated()) {
+      return;
+    }
+
+    let active = true;
+    authService
+      .getMe()
+      .then((freshUser) => {
+        if (active) setUser(freshUser);
+      })
+      .catch(() => {
+        if (active) setUser(null);
+      })
+      .finally(() => {
+        if (active) setCheckingSession(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleLoginSuccess = (loggedInUser: User) => {
+    queryClient.clear();
     setCurrentTab('beranda');
-    resetNavigation();
+    setUser(loggedInUser);
   };
 
   const handleLogout = () => {
-    setAccount(null);
-    setCurrentTab('beranda');
-    resetNavigation();
+    void authService.logout().finally(() => {
+      queryClient.clear();
+      setCurrentTab('beranda');
+      setUser(null);
+    });
   };
 
-  const handleApprove = (id: string, notes: string) => {
-    window.alert(`Pengajuan ${id} berhasil DISETUJUI!${notes ? ` Catatan: ${notes}` : ''}`);
-    setPengajuanList((prev) => prev.filter((p) => p.id !== id));
-    setSelectedPengajuanId(null);
-  };
-
-  const handleReject = (id: string, notes: string) => {
-    window.alert(`Pengajuan ${id} DITOLAK / DIMINTA REVISI. Catatan: ${notes}`);
-    setPengajuanList((prev) => prev.filter((p) => p.id !== id));
-    setSelectedPengajuanId(null);
-  };
-
-  const handleDeleteArsip = (id: string) => {
-    setArsipList((prev) => prev.filter((a) => a.id !== id));
-  };
-
-  const handleViewRincianArsip = (item: ArsipItem) => {
-    window.alert(
-      `Membuka rincian berkas arsip:\nKode: ${item.kode}\nJudul: ${item.judulDokumen}\nLokasi: ${item.lokasiArsip}`,
+  if (checkingSession && !user) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] p-6 sm:p-10">
+        <div className="mx-auto max-w-6xl">
+          <SkeletonDashboard />
+        </div>
+      </div>
     );
-  };
-
-  if (!account) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
-  const role = account.role;
-  const selectedPengajuan = pengajuanList.find((p) => p.id === selectedPengajuanId);
-
   return (
-    <AppLayout
-      role={role}
-      currentTab={currentTab}
-      onSelectTab={handleSelectTab}
-      onLogout={handleLogout}
-    >
-      {/* VIEW: ROLE DIREKTUR */}
-      {role === 'direktur' &&
-        (selectedPengajuan ? (
-          <DirekturDetailPage
-            pengajuan={selectedPengajuan}
-            onBack={() => setSelectedPengajuanId(null)}
-            onApprove={handleApprove}
-            onReject={handleReject}
-          />
-        ) : currentTab === 'beranda' ? (
-          <DirekturBerandaPage
-            pengajuanList={pengajuanList}
-            onSelectPengajuan={(id) => setSelectedPengajuanId(id)}
-          />
-        ) : (
-          <DirekturArsipPage
-            arsipList={arsipList}
-            onDeleteArsip={handleDeleteArsip}
-            onViewRincian={handleViewRincianArsip}
-          />
-        ))}
-
-      {/* VIEW: ROLE SEKRETARIS DAN KEUANGAN */}
-      {role === 'sekretaris' &&
-        (selectedPengajuan ? (
-          <DirekturDetailPage
-            pengajuan={selectedPengajuan}
-            onBack={() => setSelectedPengajuanId(null)}
-            onApprove={handleApprove}
-            onReject={handleReject}
-          />
-        ) : currentTab === 'beranda' ? (
-          <SekretarisBerandaPage
-            pengajuanList={pengajuanList}
-            onSelectPengajuan={(id) => setSelectedPengajuanId(id)}
-          />
-        ) : currentTab === 'arsip' ? (
-          <SekretarisArsipPage
-            arsipList={arsipList}
-            onDeleteArsip={handleDeleteArsip}
-            onViewRincian={handleViewRincianArsip}
-          />
-        ) : currentTab === 'termin' ? (
-          selectedProyekId ? (
-            <SekretarisTerminDetailPage
-              proyekId={selectedProyekId}
-              onBack={() => setSelectedProyekId(null)}
-            />
-          ) : (
-            <SekretarisTerminListPage
-              proyekList={proyekList}
-              onSelectProyek={(id) => setSelectedProyekId(id)}
-            />
-          )
-        ) : (
-          <SekretarisContactPage />
-        ))}
-
-      {/* VIEW: ROLE ADMIN LAPANGAN */}
-      {role === 'admin_lapangan' &&
-        (currentTab === 'beranda' ? (
-          selectedProyekId ? (
-            <AdminProyekDetailPage
-              proyekId={selectedProyekId}
-              onBack={() => setSelectedProyekId(null)}
-            />
-          ) : (
-            <AdminBerandaPage
-              proyekList={proyekList}
-              onSelectProyek={(id) => setSelectedProyekId(id)}
-            />
-          )
-        ) : currentTab === 'kendala' ? (
-          <AdminKendalaPage />
-        ) : (
-          <AdminArsipPage arsipList={arsipList} onViewRincian={handleViewRincianArsip} />
-        ))}
-    </AppLayout>
+    <RealtimeSyncProvider enabled={Boolean(user)} activeTab={user ? (currentTab as NotificationModule) : null}>
+      {user ? (
+        <AuthenticatedShell
+          user={user}
+          currentTab={currentTab}
+          onSelectTab={setCurrentTab}
+          onUserUpdated={(updated) => setUser(updated)}
+          onLogout={handleLogout}
+        />
+      ) : (
+        <LoginPage onLoginSuccess={handleLoginSuccess} />
+      )}
+    </RealtimeSyncProvider>
   );
 }

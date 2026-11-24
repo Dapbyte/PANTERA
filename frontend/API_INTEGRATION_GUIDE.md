@@ -15,11 +15,18 @@ frontend/src/
 ├── types/
 │   └── api.ts               # TypeScript interfaces & types lengkap (Model, Request, Response)
 ├── services/
-│   ├── authService.ts       # Service login, logout, me, update profile
-│   ├── projectService.ts    # Service katalog proyek, detail RAB, & pembuatan proyek (UC-12 / SD-08)
-│   ├── archiveService.ts    # Service pencarian arsip multi-kriteria, detail, & upload hibrida (UC-02, UC-11, SD-07)
-│   ├── userService.ts       # Service manajemen pengguna sistem (khusus Direktur)
-│   └── index.ts             # Central export untuk import satu pintu
+│   ├── authService.ts         # Service login, logout, me, update profile
+│   ├── projectService.ts      # Service katalog proyek, detail RAB, & pembuatan proyek (UC-12 / SD-08)
+│   ├── archiveService.ts      # Service pencarian arsip, detail, update lokasi, & upload hibrida (UC-02, UC-11, SD-07)
+│   ├── userService.ts         # Service manajemen pengguna sistem (khusus Direktur)
+│   ├── materialService.ts     # Service pengajuan material, validasi Keuangan, approval Direktur & PO (UC-07, UC-03, UC-01)
+│   ├── progressService.ts     # Service input progres fisik & verifikasi pengawas (UC-08)
+│   ├── kendalaService.ts      # Service laporan & penyelesaian kendala lapangan (UC-09)
+│   ├── earlyWarningService.ts # Service portofolio & analisis early warning termin (UC-04)
+│   ├── terminService.ts       # Service checklist & upload/verifikasi dokumen termin (UC-10)
+│   ├── billingService.ts      # Service penagihan ke dinas, koreksi dinas, & SP2D (UC-06)
+│   ├── bankCreditService.ts   # Service koordinasi kredit bank & laporan performa proyek (UC-05)
+│   └── index.ts               # Central export untuk import satu pintu
 └── API_INTEGRATION_GUIDE.md # Panduan ini
 ```
 
@@ -271,14 +278,41 @@ export const useCreateProject = () => {
 | `GET` | `/api/auth/me` | Authenticated | Ambil profil pengguna login |
 | `PUT` | `/api/auth/profile` | Authenticated | Perbarui data diri & kata sandi |
 | `GET` | `/api/projects` | Semua Peran | Katalog daftar proyek dengan filter keyword & status |
-| `GET` | `/api/projects/{id}` | Semua Peran | Detail proyek, rincian pagu RAB, & termin pembayaran |
-| `POST` | `/api/projects` | `Direktur` | Buat proyek + pagu RAB + jadwal termin (UC-12 & SD-08) |
-| `GET` | `/api/archive` | Semua Peran | Pencarian arsip multi-kriteria (UC-02 & SD-07) |
-| `GET` | `/api/archive/{id}` | Semua Peran | Detail arsip, koordinat rak fisik, & URL file digital |
+| `GET` | `/api/projects/{id_proyek}` | Semua Peran | Detail proyek, rincian pagu RAB, & termin pembayaran |
+| `POST` | `/api/projects` | `Direktur` | Buat proyek + pagu RAB + jadwal termin (UC-12 & SD-08; alias `/api/projects/new`) |
+| `GET` | `/api/projects/{id_proyek}/performance-report` | `Direktur`, `SekretarisKeuangan` | Laporan performa proyek & fasilitas kredit bank (UC-05) |
+| `GET` | `/api/material-requests` | Semua Peran | Daftar pengajuan material (filter status, proyek, sifat) |
+| `GET` | `/api/material-requests/{id_request}` | Semua Peran | Detail pengajuan material + item + sisa pagu RAB + PO |
+| `POST` | `/api/material-requests` | `AdminLapangan` | Buat pengajuan material baru + cek pagu RAB (UC-07 & SD-02) |
+| `PUT` | `/api/material-requests/{id_request}` | `AdminLapangan` | Revisi pengajuan material yang berstatus Revisi (UC-07) |
+| `PATCH` | `/api/material-requests/{id_request}/validate` | `SekretarisKeuangan` | Validasi keuangan & skema Kas/Kredit (UC-03 & SD-03) |
+| `PATCH` | `/api/material-requests/{id_request}/approve` | `Direktur` | Approval Direktur, potong saldo RAB & terbitkan PO (UC-01 & SD-04) |
+| `GET` | `/api/projects/{id_proyek}/progress` | Semua Peran | Riwayat progres fisik proyek |
+| `POST` | `/api/projects/{id_proyek}/progress` | `AdminLapangan` | Input progres fisik + evaluasi milestone & early warning (UC-08) |
+| `PATCH` | `/api/progress/{id_progres}/verifikasi` | `Direktur` | Verifikasi laporan progres oleh pengawas/direktur |
+| `GET` | `/api/projects/{id_proyek}/kendala` | Semua Peran | Daftar kendala lapangan proyek |
+| `POST` | `/api/projects/{id_proyek}/kendala` | `AdminLapangan` | Lapor kendala lapangan + hitung ulang early warning (UC-09) |
+| `PATCH` | `/api/kendala/{id_kendala}/resolve` | `AdminLapangan` | Tandai kendala selesai & evaluasi ulang early warning (UC-09) |
+| `GET` | `/api/early-warning` | `Direktur`, `SekretarisKeuangan` | Ringkasan early warning portofolio proyek |
+| `GET` | `/api/projects/{id_proyek}/early-warning` | Semua Peran | Analisis early warning + rekomendasi proyek tertentu |
+| `GET` | `/api/projects/{id_proyek}/termin` | Semua Peran | Daftar termin proyek |
+| `GET` | `/api/termin/{id_termin}/checklist` | Semua Peran | Checklist kelengkapan dokumen wajib termin (UC-10) |
+| `POST` | `/api/termin/{id_termin}/dokumen` | `AdminLapangan` | Unggah dokumen pendukung termin (UC-10) |
+| `PATCH` | `/api/termin/{id_termin}/dokumen/{id_dokumen}/verifikasi` | `AdminLapangan`, `SekretarisKeuangan`, `Direktur` | Verifikasi dokumen termin & update status `Siap serah` (UC-10) |
+| `POST` | `/api/termin/{id_termin}/ajukan` | `SekretarisKeuangan` | Ajukan berkas penagihan termin (UC-06) |
+| `POST` | `/api/termin/{id_termin}/koreksi` | `SekretarisKeuangan` | Catat koreksi penagihan termin (UC-06) |
+| `POST` | `/api/termin/{id_termin}/sp2d` | `SekretarisKeuangan` | Catat pencairan SP2D termin (UC-06) |
+| `GET` | `/api/bank-credits` | `Direktur`, `SekretarisKeuangan` | Daftar koordinasi & fasilitas kredit bank (UC-05) |
+| `POST` | `/api/bank-credits` | `SekretarisKeuangan` | Catat pengajuan/koordinasi kredit bank (UC-05) |
+| `PATCH` | `/api/bank-credits/{id_kredit}` | `SekretarisKeuangan` | Perbarui status/plafon fasilitas kredit bank (UC-05) |
+| `GET` | `/api/archive` | Semua Peran | Pencarian arsip multi-kriteria (UC-02 & SD-07; alias `/api/archive/search`) |
+| `GET` | `/api/archive/{id_arsip}` | Semua Peran | Detail arsip, koordinat rak fisik, & URL file digital |
 | `POST` | `/api/archive` | `Direktur`, `SekretarisKeuangan`, `AdminLapangan` | Catat arsip fisik/digital/hibrida + upload file (UC-11) |
-| `DELETE` | `/api/archive/{id}` | `Direktur` | Hapus arsip dokumen |
+| `PATCH` | `/api/archive/{id_arsip}` | `Direktur`, `SekretarisKeuangan`, `AdminLapangan` | Perbarui lokasi fisik arsip |
+| `DELETE` | `/api/archive/{id_arsip}` | `Direktur` | Hapus arsip dokumen |
 | `GET` | `/api/users` | `Direktur` | Daftar seluruh pengguna terdaftar |
 | `POST` | `/api/users` | `Direktur` | Pendaftaran pengguna baru |
+| `PATCH` | `/api/users/{id_pengguna}` | `Direktur` | Perbarui peran, status aktif, atau batas approval pengguna |
 
 ---
-*Dibuat oleh Tim Arsitektur Backend PANTERA untuk mempermudah dan mempercepat delivery tim Frontend.*
+*Dibuat oleh Tim Arsitektur Backend PANTERA untuk mendukung integrasi End-to-End Frontend Web & PWA.*

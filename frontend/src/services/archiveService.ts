@@ -1,46 +1,46 @@
-import axios from 'axios';
 import { api } from '../lib/api';
 import type {
   ArchiveDetailResponseData,
+  ArchivePaginatedResponse,
   ArchiveSearchFilters,
   ApiResponse,
-  ArsipDokumen,
   CreateArchiveResponseData,
   StoreArsipPayload,
+  UpdateArchiveResponseData,
+  UpdateArsipPayload,
 } from '../types/api';
 
 export const archiveService = {
   /**
-   * Pencarian multi-kriteria repositori arsip dokumen (UC-02 & SD-07).
-   * Menangani kode status 404 (SD-07: Arsip tidak ditemukan) dengan mengembalikan array kosong [].
+   * Pencarian & daftar arsip dengan pagination & pengurutan (selalu 200 OK).
    */
-  async searchArchives(filters?: ArchiveSearchFilters): Promise<ArsipDokumen[]> {
-    try {
-      const response = await api.get<ApiResponse<ArsipDokumen[]>>('/archive', {
-        params: filters,
-      });
-      return response.data.data;
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 404) {
-        // SD-07: Repositori mengembalikan 404 jika hasil pencarian kosong
-        return [];
-      }
-      throw error;
-    }
+  async searchArchives(filters?: ArchiveSearchFilters): Promise<ArchivePaginatedResponse> {
+    const response = await api.get<ApiResponse<ArchivePaginatedResponse>>('/archive', {
+      params: filters,
+    });
+    return response.data.data;
   },
 
-  /**
-   * Mengambil detail arsip lengkap beserta lokasi fisik dan URL file digital.
-   */
   async getArchiveDetail(idArsip: number): Promise<ArchiveDetailResponseData> {
     const response = await api.get<ApiResponse<ArchiveDetailResponseData>>(`/archive/${idArsip}`);
     return response.data.data;
   },
 
   /**
-   * Pencatatan arsip baru ke repositori fisik / digital / hibrida (UC-11).
-   * Otomatis mengonversi payload ke FormData untuk pengunggahan berkas digital.
+   * Mengambil blob berkas digital secara terautentikasi untuk preview inline & unduh tanpa 404.
    */
+  async fetchArchiveFileBlob(idArsip: number, download = false): Promise<{ blob: Blob; contentType: string }> {
+    const response = await api.get<Blob>(`/archive/${idArsip}/file`, {
+      params: download ? { download: 1 } : undefined,
+      responseType: 'blob',
+    });
+    const contentType =
+      (response.headers['content-type'] as string | undefined) ||
+      response.data.type ||
+      'application/octet-stream';
+    return { blob: response.data, contentType };
+  },
+
   async createArchive(payload: StoreArsipPayload): Promise<CreateArchiveResponseData> {
     const formData = new FormData();
 
@@ -61,7 +61,6 @@ export const archiveService = {
       formData.append('file_dokumen', payload.file_dokumen);
     }
 
-    // Koordinat fisik jika tipe Fisik atau Hibrida
     if (payload.nomor_binder) formData.append('nomor_binder', payload.nomor_binder);
     if (payload.nomor_rak) formData.append('nomor_rak', payload.nomor_rak);
     if (payload.ruang_simpan) formData.append('ruang_simpan', payload.ruang_simpan);
@@ -80,24 +79,21 @@ export const archiveService = {
     return response.data.data;
   },
 
-  /**
-   * Menghapus dokumen arsip dari repositori.
-   * Khusus akun Direktur.
-   */
+  async updateArchive(idArsip: number, payload: UpdateArsipPayload): Promise<UpdateArchiveResponseData> {
+    const response = await api.patch<ApiResponse<UpdateArchiveResponseData>>(`/archive/${idArsip}`, payload);
+    return response.data.data;
+  },
+
   async deleteArchive(idArsip: number): Promise<void> {
     await api.delete<ApiResponse<null>>(`/archive/${idArsip}`);
   },
 
-  /**
-   * Helper untuk mendapatkan URL unduh/lihat file digital dari path penyimpanan backend.
-   */
   getDigitalFileUrl(pathDigital: string | null): string | null {
     if (!pathDigital) return null;
     if (pathDigital.startsWith('http://') || pathDigital.startsWith('https://')) {
       return pathDigital;
     }
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
-    // Membersihkan double slash jika ada
     const cleanBase = baseUrl.replace(/\/api$/, '');
     const cleanPath = pathDigital.startsWith('/') ? pathDigital : `/${pathDigital}`;
     return `${cleanBase}/storage${cleanPath}`;
