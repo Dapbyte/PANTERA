@@ -1,195 +1,224 @@
 import React, { useState } from 'react';
-import type { ProyekTermin } from '../../types/sekretaris';
-import { Search, SlidersHorizontal, ChevronRight, Plus } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  earlyWarningService,
+  projectService,
+  type EarlyWarningStatus,
+  type ProjectListItem,
+} from '../../services';
+import { extractApiError } from '../../lib/api';
+import { formatTanggal } from '../../lib/formatters';
+import { EarlyWarningStatusBadge } from '../../components/common/EarlyWarningVisuals';
+import { getEarlyWarningTone } from '../../lib/earlyWarningTheme';
+import { SkeletonDashboard } from '../../components/ui';
+import { AlertCircle, ChevronRight, Lock, Search } from 'lucide-react';
 
 interface AdminBerandaPageProps {
-  proyekList: ProyekTermin[];
-  onSelectProyek: (id: string) => void;
+  onSelectProyek: (idProyek: number) => void;
 }
 
-export const AdminBerandaPage: React.FC<AdminBerandaPageProps> = ({
-  proyekList,
-  onSelectProyek,
-}) => {
+export const AdminBerandaPage: React.FC<AdminBerandaPageProps> = ({ onSelectProyek }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('Semua');
+  const [selectedStatus, setSelectedStatus] = useState<'Semua' | EarlyWarningStatus>('Semua');
 
-  const filteredList = proyekList.filter((item) => {
+  const {
+    data: projects = [],
+    isLoading: loadingProj,
+    error: errProj,
+  } = useQuery<ProjectListItem[]>({
+    queryKey: ['projects', 'admin-beranda'],
+    queryFn: () => projectService.getProjects(),
+  });
+
+  const { data: statusMap = {} } = useQuery<Record<number, EarlyWarningStatus>>({
+    queryKey: ['early-warning', 'admin-map', projects.map((p) => p.id_proyek).join(',')],
+    enabled: projects.length > 0,
+    queryFn: async () => {
+      const settled = await Promise.allSettled(
+        projects.map((p) => earlyWarningService.getProjectAnalysis(p.id_proyek))
+      );
+      const map: Record<number, EarlyWarningStatus> = {};
+      settled.forEach((res, idx) => {
+        if (res.status === 'fulfilled') {
+          map[projects[idx].id_proyek] = res.value.status;
+        }
+      });
+      return map;
+    },
+  });
+
+  const enriched = projects.map((p) => ({
+    ...p,
+    ewStatus: statusMap[p.id_proyek] ?? ('Aman' as EarlyWarningStatus),
+  }));
+
+  const filteredList = enriched.filter((item) => {
+    const q = searchTerm.toLowerCase();
     const matchSearch =
-      item.namaProyek.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.tender.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = selectedStatus === 'Semua' || item.status === selectedStatus;
+      item.nama_proyek.toLowerCase().includes(q) ||
+      item.dinas_pemberi_kerja.toLowerCase().includes(q) ||
+      item.kode_proyek.toLowerCase().includes(q);
+    const matchStatus = selectedStatus === 'Semua' || item.ewStatus === selectedStatus;
     return matchSearch && matchStatus;
   });
 
+  const riskyCount = enriched.filter((p) => p.ewStatus !== 'Aman').length;
+  const hasKritis = enriched.some((p) => p.ewStatus === 'Kritis');
+  const overallStatus: EarlyWarningStatus = hasKritis
+    ? 'Kritis'
+    : riskyCount > 0
+      ? 'Waspada'
+      : 'Aman';
+  const tone = getEarlyWarningTone(overallStatus);
+
+  const errorMsg = errProj
+    ? extractApiError(errProj, 'Gagal memuat daftar proyek lapangan.')
+    : null;
+
   return (
     <div className="space-y-4">
-      {/* Title & Action */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
         <h1 className="text-xl font-bold tracking-tight text-[#1877F2] sm:text-2xl">
-          Daftar Proyek
+          Daftar Proyek Lapangan
         </h1>
-        <button
-          onClick={() => window.alert('Membuka formulir pendaftaran proyek baru...')}
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 cursor-pointer"
-        >
-          <Plus className="h-4 w-4 text-[#1877F2]" />
-          <span>Unggah Proyek Baru</span>
-        </button>
+        <p className="text-xs text-gray-500">
+          Pilih proyek yang ditugaskan kepada Anda untuk input progres, material, atau termin
+        </p>
       </div>
 
-      {/* Ringkasan */}
-      <div>
-        <div className="text-[10px] font-semibold text-gray-400 tracking-wider uppercase mb-2">
-          Ringkasan
+      {errorMsg && (
+        <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{errorMsg}</span>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {/* Card 1: Total Proyek */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex flex-col gap-1">
-            <div className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">
-              Total Proyek
+      )}
+
+      {loadingProj ? (
+        <SkeletonDashboard />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+              <div className="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
+                Proyek Ditugaskan
+              </div>
+              <div className="text-xl font-bold leading-tight tracking-tight text-gray-900">
+                {projects.length} Proyek
+              </div>
             </div>
-            <div className="text-xl font-bold text-gray-900 tracking-tight leading-tight">
-              1000 Proyek!
-            </div>
-          </div>
 
-          {/* Card 2: Estimasi Keterlambatan */}
-          <div className="bg-[#1877F2] rounded-2xl p-4 shadow-md shadow-blue-500/20 text-white flex flex-col gap-1 relative">
-            <div className="flex items-start justify-between gap-1">
-              <span className="text-[9px] font-semibold text-white/80 uppercase tracking-wider leading-tight">
-                Proyek Dengan Estimasi Keterlambatan
-              </span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-300/40 shrink-0 mt-0.5" />
-            </div>
-            <div className="text-xl font-bold text-white tracking-tight leading-tight">0 Proyek</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="space-y-2">
-        {/* Search */}
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Cari kode atau judul..."
-            className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#1877F2] shadow-sm transition"
-          />
-        </div>
-
-        {/* Filter chips */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => setSelectedStatus('Semua')}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-              selectedStatus === 'Semua'
-                ? 'bg-gray-900 text-white shadow-sm'
-                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            Semua
-          </button>
-
-          <button
-            onClick={() => alert('Filter tipe proyek')}
-            className="bg-white border border-gray-200 hover:bg-gray-50 px-3.5 py-1.5 rounded-full text-xs font-medium text-gray-700 flex items-center gap-1.5 transition cursor-pointer"
-          >
-            <SlidersHorizontal className="w-3 h-3 text-gray-400" />
-            <span>Tipe</span>
-          </button>
-
-          <button
-            onClick={() => alert('Filter tanggal')}
-            className="bg-white border border-gray-200 hover:bg-gray-50 px-3.5 py-1.5 rounded-full text-xs font-medium text-gray-700 flex items-center gap-1.5 transition cursor-pointer"
-          >
-            <SlidersHorizontal className="w-3 h-3 text-gray-400" />
-            <span>Tanggal</span>
-          </button>
-
-          <div className="relative">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="appearance-none bg-white border border-gray-200 hover:bg-gray-50 px-3.5 py-1.5 pr-7 rounded-full text-xs font-medium text-gray-700 focus:outline-none cursor-pointer transition"
-            >
-              <option value="Semua">Semua Status</option>
-              <option value="Aman">Aman</option>
-              <option value="Tidak Aman">Tidak Aman</option>
-            </select>
-            <SlidersHorizontal className="w-3 h-3 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-        </div>
-      </div>
-
-      {/* Daftar Proyek — Card list (mobile-first, works on desktop too) */}
-      <div>
-        <div className="text-[10px] font-semibold text-gray-400 tracking-wider uppercase mb-2">
-          Menunggu Persetujuan
-        </div>
-
-        <div className="grid gap-3 lg:grid-cols-2">
-          {filteredList.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => onSelectProyek(item.id)}
-              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm active:scale-[0.99] transition cursor-pointer"
-            >
-              {/* Row 1: ID + Status badge */}
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-xs text-[#1877F2] font-mono">{item.id}</span>
+            <div className={`flex flex-col gap-1 rounded-2xl p-4 shadow-md ${tone.cardBg}`}>
+              <div className="flex items-start justify-between gap-1">
                 <span
-                  className={`inline-block whitespace-nowrap px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                    item.status === 'Aman'
-                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                      : 'bg-rose-50 text-rose-500 border border-rose-100'
+                  className={`text-[9px] font-semibold uppercase tracking-wider leading-tight ${tone.cardSubtext}`}
+                >
+                  Status Early Warning
+                </span>
+                <span className={`mt-0.5 h-2 w-2 shrink-0 rounded-full ring-2 ${tone.dot}`} />
+              </div>
+              <div className="text-xl font-bold leading-tight tracking-tight">
+                {riskyCount === 0 ? 'Aman (0 Berisiko)' : `${riskyCount} Proyek Berisiko`}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Cari kode atau nama proyek..."
+                className="w-full rounded-full border border-gray-200 bg-white py-2.5 pl-9 pr-4 text-xs text-gray-800 placeholder-gray-400 shadow-sm focus:border-[#1877F2] focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {(['Semua', 'Aman', 'Waspada', 'Kritis'] as const).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setSelectedStatus(st)}
+                  className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                    selectedStatus === st
+                      ? 'bg-gray-900 text-white shadow-sm'
+                      : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  {item.status}
-                </span>
-              </div>
-
-              {/* Row 2: Nama + Tender */}
-              <div className="mb-2.5">
-                <h4 className="font-bold text-gray-900 text-sm leading-snug">{item.namaProyek}</h4>
-                <p className="text-xs text-gray-500">{item.tender}</p>
-              </div>
-
-              {/* Row 3: Termin info + Arrow */}
-              <div className="pt-2 border-t border-gray-50 flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <div className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">
-                    Posisi Termin
-                  </div>
-                  <div className="text-xs font-semibold text-gray-800">{item.posisiTermin}</div>
-                </div>
-
-                <div className="space-y-0.5 text-right">
-                  <div className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">
-                    Termin Selanjutnya
-                  </div>
-                  <div className="text-xs font-medium text-gray-700">{item.terminSelanjutnya}</div>
-                </div>
-
-                <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 ml-2" />
-              </div>
+                  {st}
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
-
-        {/* Pagination hint */}
-        {filteredList.length > 0 && (
-          <div className="text-center pt-3">
-            <p className="text-[10px] text-gray-400">
-              Menampilkan {filteredList.length} dari {proyekList.length} proyek tersimpan
-            </p>
           </div>
-        )}
-      </div>
+
+          {projects.length === 0 ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-8 text-center text-xs text-amber-900 space-y-2">
+              <Lock className="mx-auto h-7 w-7 text-amber-600" />
+              <div className="font-bold text-sm">Belum Ada Penugasan Proyek</div>
+              <p className="text-amber-800">
+                Hubungi Direktur untuk mendapatkan hak akses proyek lapangan pada akun Anda.
+              </p>
+            </div>
+          ) : filteredList.length === 0 ? (
+            <div className="rounded-2xl border border-gray-100 bg-white p-10 text-center text-xs text-gray-400">
+              Tidak ada proyek yang sesuai pencarian.
+            </div>
+          ) : (
+            <div className="grid gap-3 lg:grid-cols-2">
+              {filteredList.map((item) => (
+                <button
+                  key={item.id_proyek}
+                  type="button"
+                  onClick={() => onSelectProyek(item.id_proyek)}
+                  className="w-full rounded-2xl border border-gray-100 bg-white p-4 text-left shadow-sm transition hover:border-blue-300 hover:bg-blue-50/20"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-[#1877F2]">
+                      {item.kode_proyek}
+                    </span>
+                    <EarlyWarningStatusBadge status={item.ewStatus} />
+                  </div>
+
+                  <div className="mb-2.5">
+                    <h4 className="text-sm font-bold leading-snug text-gray-900">
+                      {item.nama_proyek}
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      {item.dinas_pemberi_kerja} • Realisasi{' '}
+                      <strong>{item.progres_fisik_terakhir.persentase_realisasi}%</strong>
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-gray-50 pt-2">
+                    <div className="space-y-0.5">
+                      <div className="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
+                        Termin Berjalan
+                      </div>
+                      <div className="text-xs font-semibold text-gray-800">
+                        {item.posisi_termin_berjalan
+                          ? `Termin ${item.posisi_termin_berjalan.nomor_termin} (${item.posisi_termin_berjalan.status_penagihan})`
+                          : 'Selesai'}
+                      </div>
+                    </div>
+
+                    <div className="space-y-0.5 text-right">
+                      <div className="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
+                        Tenggat
+                      </div>
+                      <div className="text-xs font-medium text-gray-700">
+                        {formatTanggal(item.posisi_termin_berjalan?.tenggat_waktu)}
+                      </div>
+                    </div>
+
+                    <ChevronRight className="ml-2 h-4 w-4 shrink-0 text-gray-400" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
