@@ -35,7 +35,8 @@ RUN mkdir -p \
     bootstrap/cache \
     && sed -i 's/\r$//' docker/start.sh \
     && chmod +x docker/start.sh \
-    && chmod -R 775 storage bootstrap/cache \
+    && chmod -R 777 storage bootstrap/cache \
+    && ln -sfn ../storage/app/public public/storage \
     && composer dump-autoload --optimize --no-dev
 
 EXPOSE 8000
