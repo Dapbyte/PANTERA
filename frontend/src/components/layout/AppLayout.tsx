@@ -20,7 +20,6 @@ interface AppLayoutProps {
   role: UserRole;
   currentTab: ActiveTab;
   onSelectTab: (tab: ActiveTab) => void;
-  onSwitchRole: (newRole: UserRole) => void;
   onLogout: () => void;
   children: ReactNode;
 }
@@ -30,14 +29,13 @@ type ApiStatus = 'checking' | 'online' | 'offline';
 const roleProfile: Record<UserRole, { initial: string; name: string; roleTitle: string }> = {
   direktur: { initial: 'DS', name: 'Daniel Sipahutar', roleTitle: 'Direktur' },
   sekretaris: { initial: 'R', name: 'Rita', roleTitle: 'Sekretaris & Keuangan' },
-  admin_lapangan: { initial: 'OD', name: 'Odd Dellarobia', roleTitle: 'Admin Lapangan' },
+  admin_lapangan: { initial: 'OD', name: 'Odd Dellarobia', roleTitle: 'Admin Proyek' },
 };
 
 export const AppLayout = ({
   role,
   currentTab,
   onSelectTab,
-  onSwitchRole,
   onLogout,
   children,
 }: AppLayoutProps) => {
@@ -192,27 +190,6 @@ export const AppLayout = ({
                   : 'API tidak terhubung'}
             </span>
           </button>
-
-          <div className="space-y-1">
-            <div className="px-1 text-[10px] font-semibold uppercase tracking-wider text-white/60">
-              Ganti akses peran (demo)
-            </div>
-            <div className="grid grid-cols-3 gap-1 text-[11px]">
-              {(['direktur', 'sekretaris', 'admin_lapangan'] as UserRole[]).map((item) => (
-                <button
-                  key={item}
-                  onClick={() => onSwitchRole(item)}
-                  className={`rounded-lg px-1 py-1.5 text-center font-medium transition cursor-pointer ${
-                    role === item
-                      ? 'bg-white font-bold text-[#1877F2] shadow'
-                      : 'bg-white/10 text-white hover:bg-white/20'
-                  }`}
-                >
-                  {item === 'admin_lapangan' ? 'Lapangan' : item === 'direktur' ? 'Direktur' : 'Sekretaris'}
-                </button>
-              ))}
-            </div>
-          </div>
 
           <button
             onClick={onLogout}
