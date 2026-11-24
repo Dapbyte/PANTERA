@@ -22,6 +22,7 @@ class ProgresFisik extends Model
         'persentase_realisasi',
         'deskripsi_pekerjaan',
         'path_foto',
+        'foto_paths',
         'verifikasi_pengawas',
     ];
 
@@ -30,6 +31,7 @@ class ProgresFisik extends Model
         return [
             'tanggal_lapor' => 'date:Y-m-d',
             'persentase_realisasi' => 'double',
+            'foto_paths' => 'array',
             'verifikasi_pengawas' => 'boolean',
         ];
     }

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\MitraBank;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -9,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed data awal sistem PANTERA untuk 3 akun utama.
+     * Seed data awal sistem PANTERA untuk 3 akun utama & daftar mitra bank.
      */
     public function run(): void
     {
@@ -21,8 +22,8 @@ class DatabaseSeeder extends Seeder
                 'password_hash' => Hash::make('password123'),
                 'peran' => 'Direktur',
                 'status_aktif' => true,
+                'must_change_password' => false,
                 'divisi' => 'Direksi',
-                'batas_approval_nominal' => 500000000.00,
             ]
         );
 
@@ -34,8 +35,8 @@ class DatabaseSeeder extends Seeder
                 'password_hash' => Hash::make('password123'),
                 'peran' => 'SekretarisKeuangan',
                 'status_aktif' => true,
+                'must_change_password' => false,
                 'divisi' => 'Keuangan & Administrasi',
-                'batas_verifikasi_kas' => 100000000.00,
             ]
         );
 
@@ -47,9 +48,23 @@ class DatabaseSeeder extends Seeder
                 'password_hash' => Hash::make('password123'),
                 'peran' => 'AdminLapangan',
                 'status_aktif' => true,
+                'must_change_password' => false,
                 'lokasi_tugas' => 'Proyek Konstruksi Lapangan',
                 'nomor_kontak' => '081234567890',
             ]
         );
+
+        // 4. Mitra Perbankan Kredit Konstruksi default (KEU-07)
+        $defaultBanks = [
+            'Bank BNI',
+            'Bank BCA',
+            'Bank BRI',
+            'Bank BTN',
+            'Bank Jatim',
+        ];
+
+        foreach ($defaultBanks as $bank) {
+            MitraBank::updateOrCreate(['nama_bank' => $bank]);
+        }
     }
 }

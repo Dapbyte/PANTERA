@@ -21,6 +21,8 @@ class ItemMaterial extends Model
         'satuan',
         'estimasi_harga',
         'ketersediaan_vendor',
+        'vendor_nama',
+        'vendor_pengganti',
     ];
 
     protected function casts(): array
@@ -35,5 +37,17 @@ class ItemMaterial extends Model
     public function requestMaterial(): BelongsTo
     {
         return $this->belongsTo(RequestMaterial::class, 'id_request', 'id_request');
+    }
+
+    /**
+     * Menghitung subtotal item material (volume * estimasi_harga).
+     */
+    public function hitungSubtotal(): float
+    {
+        if ($this->estimasi_harga === null) {
+            return 0.0;
+        }
+
+        return round((float) $this->volume * (float) $this->estimasi_harga, 2);
     }
 }

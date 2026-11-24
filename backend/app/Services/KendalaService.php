@@ -22,7 +22,12 @@ class KendalaService
     // Kalau ID gaada, pake pakali laporan progres terbaru
     // Kendala wajib nempel sama satu laporan progres
 
-    public function create(Proyek $proyek, array $data, ?UploadedFile $foto = null): array
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<int, UploadedFile>  $fotos
+     * @return array<string, mixed>
+     */
+    public function create(Proyek $proyek, array $data, ?UploadedFile $foto = null, array $fotos = []): array
     {
         $laporanProyek = ProgresFisik::where('id_proyek', $proyek->id_proyek);
         $progres = isset($data['id_progres'])
@@ -37,7 +42,25 @@ class KendalaService
             ]);
         }
 
-        $kendala = DB::transaction(function () use ($progres, $data, $foto) {
+        $uploadedFiles = [];
+        if ($foto instanceof UploadedFile) {
+            $uploadedFiles[] = $foto;
+        }
+        foreach ($fotos as $extra) {
+            if ($extra instanceof UploadedFile) {
+                $uploadedFiles[] = $extra;
+            }
+        }
+
+        $kendala = DB::transaction(function () use ($progres, $data, $uploadedFiles) {
+            $storedPaths = [];
+            foreach ($uploadedFiles as $file) {
+                $path = $file->store('kendala', 'public');
+                if (is_string($path) && $path !== '') {
+                    $storedPaths[] = $path;
+                }
+            }
+
             return KendalaLapangan::create([
                 'id_progres' => $progres->id_progres,
                 'tanggal_kejadian' => $data['tanggal_kejadian'] ?? now()->toDateString(),
@@ -46,7 +69,8 @@ class KendalaService
                 'deskripsi_kendala' => $data['deskripsi_kendala'],
                 'estimasi_hari_tertunda' => $data['estimasi_hari_tertunda'],
                 'status_penanganan' => KendalaLapangan::STATUS_AKTIF,
-                'path_foto' => $foto?->store('kendala', 'public'),
+                'path_foto' => $storedPaths[0] ?? null,
+                'foto_paths' => count($storedPaths) > 0 ? $storedPaths : null,
             ]);
         });
 

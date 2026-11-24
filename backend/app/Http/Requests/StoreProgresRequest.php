@@ -20,6 +20,8 @@ class StoreProgresRequest extends FormRequest
             'persentase_realisasi' => ['required', 'numeric', 'between:0,100'],
             'deskripsi_pekerjaan' => ['required', 'string', 'max:2000'],
             'foto' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'fotos' => ['nullable', 'array', 'max:10'],
+            'fotos.*' => ['file', 'mimes:jpg,jpeg,png', 'max:10240'],
         ];
     }
 
@@ -34,6 +36,9 @@ class StoreProgresRequest extends FormRequest
             'deskripsi_pekerjaan.required' => 'Deskripsi pekerjaan wajib diisi.',
             'foto.mimes' => 'Format foto harus berupa JPG, JPEG, atau PNG.',
             'foto.max' => 'Ukuran foto maksimal 10 MB.',
+            'fotos.max' => 'Maksimal 10 foto yang dapat diunggah sekaligus.',
+            'fotos.*.mimes' => 'Semua foto harus berformat JPG, JPEG, atau PNG.',
+            'fotos.*.max' => 'Ukuran setiap foto maksimal 10 MB.',
         ];
     }
 }

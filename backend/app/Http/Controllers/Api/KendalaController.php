@@ -7,6 +7,7 @@ use App\Http\Requests\ResolveKendalaRequest;
 use App\Http\Requests\StoreKendalaRequest;
 use App\Models\KendalaLapangan;
 use App\Models\Proyek;
+use App\Models\User;
 use App\Services\KendalaService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -31,6 +32,12 @@ class KendalaController extends Controller
             return $this->errorResponse('Proyek tidak ditemukan.', 404);
         }
 
+        /** @var User $user */
+        $user = $request->user();
+        if (! $user->canAccessProyek($id_proyek)) {
+            return $this->errorResponse('Akses ditolak: Anda tidak memiliki akses ke proyek ini.', 403);
+        }
+
         return $this->successResponse(
             $this->kendalaService->listForProject($proyek, $request->query('status')),
             'Daftar kendala lapangan berhasil dimuat.'
@@ -38,7 +45,7 @@ class KendalaController extends Controller
     }
 
     /**
-     * Melaporkan kendala lapangan (UC-09). Khusus Admin Lapangan.
+     * Melaporkan kendala lapangan. Khusus Admin Lapangan pada proyek yang ditugaskan.
      */
     public function store(StoreKendalaRequest $request, int $id_proyek): JsonResponse
     {
@@ -48,20 +55,42 @@ class KendalaController extends Controller
             return $this->errorResponse('Proyek tidak ditemukan.', 404);
         }
 
-        $hasil = $this->kendalaService->create($proyek, $request->validated(), $request->file('foto'));
+        /** @var User $user */
+        $user = $request->user();
+        if (! $user->canAccessProyek($id_proyek)) {
+            return $this->errorResponse('Akses ditolak: Anda tidak memiliki akses ke proyek ini.', 403);
+        }
+
+        $fotos = $request->file('fotos', []);
+        $fotosArray = is_array($fotos) ? $fotos : [];
+
+        $hasil = $this->kendalaService->create(
+            $proyek,
+            $request->validated(),
+            $request->file('foto'),
+            $fotosArray
+        );
 
         return $this->successResponse($hasil, 'Kendala lapangan berhasil dilaporkan.', 201);
     }
 
     /**
-     * Menandai kendala selesai / Resolved (UC-09 A1). Khusus Admin Lapangan.
+     * Menandai kendala selesai / Resolved. Khusus Admin Lapangan pada proyek yang ditugaskan.
      */
     public function resolve(ResolveKendalaRequest $request, int $id_kendala): JsonResponse
     {
-        $kendala = KendalaLapangan::find($id_kendala);
+        $kendala = KendalaLapangan::with('progresFisik')->find($id_kendala);
 
         if (! $kendala) {
             return $this->errorResponse('Kendala tidak ditemukan.', 404);
+        }
+
+        /** @var User $user */
+        $user = $request->user();
+        $progres = $kendala->progresFisik;
+        $idProyek = $progres ? (int) $progres->id_proyek : 0;
+        if ($idProyek > 0 && ! $user->canAccessProyek($idProyek)) {
+            return $this->errorResponse('Akses ditolak: Anda tidak memiliki akses ke proyek ini.', 403);
         }
 
         $hasil = $this->kendalaService->resolve($kendala, $request->validated());

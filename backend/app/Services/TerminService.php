@@ -59,6 +59,7 @@ class TerminService
                 'id_dokumen' => $dok?->id_dokumen,
                 'path_file' => $dok?->path_file,
                 'url' => $dok ? Storage::disk('public')->url($dok->path_file) : null,
+                'file_api_url' => $dok ? "/api/termin/{$termin->id_termin}/dokumen/{$dok->id_dokumen}/file" : null,
                 'status_verifikasi' => (bool) $dok?->status_verifikasi,
                 'catatan_revisi' => $dok?->catatan_revisi,
             ];

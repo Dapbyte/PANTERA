@@ -23,6 +23,8 @@ class StoreKendalaRequest extends FormRequest
             'deskripsi_kendala' => ['required', 'string', 'max:2000'],
             'estimasi_hari_tertunda' => ['required', 'integer', 'min:0', 'max:365'],
             'foto' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'fotos' => ['nullable', 'array', 'max:10'],
+            'fotos.*' => ['file', 'mimes:jpg,jpeg,png', 'max:10240'],
         ];
     }
 
@@ -39,6 +41,10 @@ class StoreKendalaRequest extends FormRequest
             'estimasi_hari_tertunda.required' => 'Estimasi hari terhenti wajib diisi.',
             'estimasi_hari_tertunda.integer' => 'Estimasi hari terhenti harus berupa bilangan bulat.',
             'foto.mimes' => 'Format foto harus berupa JPG, JPEG, atau PNG.',
+            'foto.max' => 'Ukuran foto maksimal 10 MB.',
+            'fotos.max' => 'Maksimal 10 foto yang dapat diunggah sekaligus.',
+            'fotos.*.mimes' => 'Semua foto harus berformat JPG, JPEG, atau PNG.',
+            'fotos.*.max' => 'Ukuran setiap foto maksimal 10 MB.',
         ];
     }
 }

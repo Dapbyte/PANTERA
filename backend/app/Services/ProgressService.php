@@ -18,7 +18,12 @@ class ProgressService
 
     // Menyimpan milestone progres, mengevaluasi termin, dan menyegarkan early warning
 
-    public function create(Proyek $proyek, int $pelaporId, array $data, ?UploadedFile $foto = null): array
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<int, UploadedFile>  $fotos
+     * @return array<string, mixed>
+     */
+    public function create(Proyek $proyek, int $pelaporId, array $data, ?UploadedFile $foto = null, array $fotos = []): array
     {
         $persentase = (float) $data['persentase_realisasi'];
         $tertinggi = (float) $proyek->progresFisik()->max('persentase_realisasi');
@@ -29,14 +34,33 @@ class ProgressService
             ]);
         }
 
-        $progres = DB::transaction(function () use ($proyek, $pelaporId, $data, $foto, $persentase) {
+        $uploadedFiles = [];
+        if ($foto instanceof UploadedFile) {
+            $uploadedFiles[] = $foto;
+        }
+        foreach ($fotos as $extra) {
+            if ($extra instanceof UploadedFile) {
+                $uploadedFiles[] = $extra;
+            }
+        }
+
+        $progres = DB::transaction(function () use ($proyek, $pelaporId, $data, $uploadedFiles, $persentase) {
+            $storedPaths = [];
+            foreach ($uploadedFiles as $file) {
+                $path = $file->store('progres', 'public');
+                if (is_string($path) && $path !== '') {
+                    $storedPaths[] = $path;
+                }
+            }
+
             return ProgresFisik::create([
                 'id_proyek' => $proyek->id_proyek,
                 'id_pelapor' => $pelaporId,
                 'tanggal_lapor' => $data['tanggal_lapor'] ?? now()->toDateString(),
                 'persentase_realisasi' => $persentase,
                 'deskripsi_pekerjaan' => $data['deskripsi_pekerjaan'],
-                'path_foto' => $foto?->store('progres', 'public'),
+                'path_foto' => $storedPaths[0] ?? null,
+                'foto_paths' => count($storedPaths) > 0 ? $storedPaths : null,
                 'verifikasi_pengawas' => false,
             ]);
         });
@@ -77,5 +101,15 @@ class ProgressService
             ->orderByDesc('tanggal_lapor')
             ->orderByDesc('id_progres')
             ->get();
+    }
+
+    /**
+     * Menandai atau mencabut verifikasi pengawas pada laporan progres fisik.
+     */
+    public function verifikasiPengawas(ProgresFisik $progres, bool $verified): ProgresFisik
+    {
+        $progres->update(['verifikasi_pengawas' => $verified]);
+
+        return $progres->refresh()->load(['pelapor:id_pengguna,nama', 'kendalaLapangan']);
     }
 }

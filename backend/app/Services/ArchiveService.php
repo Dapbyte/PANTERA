@@ -4,10 +4,10 @@ namespace App\Services;
 
 use App\Models\ArsipDokumen;
 use App\Models\RequestMaterial;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class ArchiveService
 {
@@ -57,7 +57,6 @@ class ArchiveService
                 ? $data['kode_arsip']
                 : $this->generateKodeArsip($tipe, $tanggal);
 
-            // Simpan file jika ada upload dokumen
             $pathDigital = null;
             if ($file) {
                 $pathDigital = $file->store('arsip', 'public');
@@ -65,7 +64,6 @@ class ArchiveService
                 $pathDigital = $data['path_digital'];
             }
 
-            // 1. Simpan metadata arsip
             $arsip = ArsipDokumen::create([
                 'id_proyek' => $data['id_proyek'],
                 'id_pencatat' => $pencatatId,
@@ -80,7 +78,6 @@ class ArchiveService
                 'path_digital' => $pathDigital,
             ]);
 
-            // 2. Simpan koordinat lokasi fisik jika Fisik atau Hibrida
             $lokasiFisik = null;
             if (in_array($tipe, ['Fisik', 'Hibrida'], true)) {
                 $lokasiFisik = $arsip->lokasiArsipFisik()->create([
@@ -91,7 +88,6 @@ class ArchiveService
                 ]);
             }
 
-            // 3. Sambungkan referensi silang transaksi material jika id_request disertakan
             if (! empty($data['id_request'])) {
                 RequestMaterial::where('id_request', $data['id_request'])
                     ->update(['id_arsip_ref' => $arsip->id_arsip]);
@@ -111,18 +107,34 @@ class ArchiveService
     }
 
     /**
-     * Pencarian multi-kriteria repositori arsip (UC-02 & SD-07).
+     * Pencarian multi-kriteria repositori arsip dengan pengurutan & pagination (ARS-04, ARS-05, ARS-06, GLB-14).
      *
      * @param  array<string, mixed>  $filters
-     * @return Collection<int, ArsipDokumen>
+     * @param  list<int>|null  $allowedProjectIds
+     * @return array{items: array<int, mixed>, meta: array<string, mixed>}
      */
-    public function searchArchives(array $filters): Collection
+    public function searchArchives(array $filters, ?array $allowedProjectIds = null): array
     {
+        if ($allowedProjectIds !== null && empty($allowedProjectIds)) {
+            return [
+                'items' => [],
+                'meta' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => 10,
+                    'total' => 0,
+                ],
+            ];
+        }
+
         $query = ArsipDokumen::with(['lokasiArsipFisik', 'proyek', 'pencatat']);
 
-        // Kata kunci pencarian global
+        if ($allowedProjectIds !== null) {
+            $query->whereIn('id_proyek', $allowedProjectIds);
+        }
+
         if (! empty($filters['q'])) {
-            $q = $filters['q'];
+            $q = trim((string) $filters['q']);
             $query->where(function ($sub) use ($q) {
                 $sub->where('kode_arsip', 'like', "%{$q}%")
                     ->orWhere('judul_dokumen', 'like', "%{$q}%")
@@ -135,48 +147,82 @@ class ArchiveService
             });
         }
 
-        // Filter jenis arsip
         if (! empty($filters['jenis_arsip'])) {
             $query->where('jenis_arsip', $filters['jenis_arsip']);
         }
 
-        // Filter tipe penyimpanan
         if (! empty($filters['tipe_penyimpanan'])) {
             $query->where('tipe_penyimpanan', $filters['tipe_penyimpanan']);
         }
 
-        // Filter proyek
         if (! empty($filters['id_proyek'])) {
-            $query->where('id_proyek', $filters['id_proyek']);
+            $query->where('id_proyek', (int) $filters['id_proyek']);
         }
 
-        // Filter koordinat fisik
-        if (! empty($filters['ruang_simpan']) || ! empty($filters['nomor_rak']) || ! empty($filters['nomor_binder'])) {
-            $query->whereHas('lokasiArsipFisik', function ($loc) use ($filters) {
-                if (! empty($filters['ruang_simpan'])) {
-                    $loc->where('ruang_simpan', 'like', "%{$filters['ruang_simpan']}%");
+        // Filter lokasi fisik fleksibel (ruang simpan / rak / binder / keterangan posisi - ARS-06)
+        $lokasiFilter = trim((string) ($filters['lokasi_fisik'] ?? $filters['ruang_simpan'] ?? ''));
+        $rakFilter = trim((string) ($filters['nomor_rak'] ?? ''));
+        $binderFilter = trim((string) ($filters['nomor_binder'] ?? ''));
+
+        if ($lokasiFilter !== '' || $rakFilter !== '' || $binderFilter !== '') {
+            $query->whereHas('lokasiArsipFisik', function ($loc) use ($lokasiFilter, $rakFilter, $binderFilter) {
+                if ($lokasiFilter !== '') {
+                    $loc->where(function ($inner) use ($lokasiFilter) {
+                        $inner->where('ruang_simpan', 'like', "%{$lokasiFilter}%")
+                            ->orWhere('nomor_rak', 'like', "%{$lokasiFilter}%")
+                            ->orWhere('nomor_binder', 'like', "%{$lokasiFilter}%")
+                            ->orWhere('keterangan_posisi', 'like', "%{$lokasiFilter}%");
+                    });
                 }
-                if (! empty($filters['nomor_rak'])) {
-                    $loc->where('nomor_rak', 'like', "%{$filters['nomor_rak']}%");
+                if ($rakFilter !== '') {
+                    $loc->where('nomor_rak', 'like', "%{$rakFilter}%");
                 }
-                if (! empty($filters['nomor_binder'])) {
-                    $loc->where('nomor_binder', 'like', "%{$filters['nomor_binder']}%");
+                if ($binderFilter !== '') {
+                    $loc->where('nomor_binder', 'like', "%{$binderFilter}%");
                 }
             });
         }
 
-        // Filter rentang tanggal arsip
-        if (! empty($filters['tanggal_awal'])) {
-            $query->where('tanggal_arsip', '>=', $filters['tanggal_awal']);
-        }
-        if (! empty($filters['tanggal_akhir'])) {
-            $query->where('tanggal_arsip', '<=', $filters['tanggal_akhir']);
-        }
-        if (! empty($filters['tanggal_arsip'])) {
-            $query->where('tanggal_arsip', $filters['tanggal_arsip']);
+        // Urutan Terbaru / Terlama (ARS-05)
+        $sort = strtolower((string) ($filters['sort'] ?? 'terbaru'));
+        if ($sort === 'terlama') {
+            $query->orderBy('tanggal_arsip', 'asc')->orderBy('id_arsip', 'asc');
+        } else {
+            $query->orderBy('tanggal_arsip', 'desc')->orderBy('id_arsip', 'desc');
         }
 
-        return $query->latest('id_arsip')->get();
+        // Pagination (ARS-04): default 10, dukung 10 / 25 / 50 / all
+        $perPageRaw = strtolower((string) ($filters['per_page'] ?? '10'));
+        if (in_array($perPageRaw, ['all', 'semua', '0', '-1'], true)) {
+            $all = $query->get();
+
+            return [
+                'items' => $all->values()->all(),
+                'meta' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => 'all',
+                    'total' => $all->count(),
+                ],
+            ];
+        }
+
+        $perPage = (int) $perPageRaw;
+        if ($perPage < 1 || $perPage > 200) {
+            $perPage = 10;
+        }
+
+        $paginator = $query->paginate($perPage);
+
+        return [
+            'items' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ];
     }
 
     /**
@@ -190,6 +236,80 @@ class ArchiveService
             'pencatat',
             'requestMaterial',
         ])->find($idArsip);
+    }
+
+    /**
+     * Memperbarui koordinat posisi arsip fisik dan metadata arsip.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>|null
+     */
+    public function updateArchiveLocation(int $idArsip, array $data): ?array
+    {
+        $arsip = ArsipDokumen::with('lokasiArsipFisik')->find($idArsip);
+
+        if (! $arsip) {
+            return null;
+        }
+
+        return DB::transaction(function () use ($arsip, $data) {
+            $metaFields = array_intersect_key($data, array_flip([
+                'nomor_surat',
+                'jenis_transaksi',
+                'pihak_penyedia',
+                'judul_dokumen',
+                'jenis_arsip',
+                'tanggal_arsip',
+                'tipe_penyimpanan',
+            ]));
+
+            if (! empty($metaFields)) {
+                $arsip->update($metaFields);
+            }
+
+            $tipeBaru = $arsip->tipe_penyimpanan;
+            $hasLocationPayload = array_key_exists('nomor_binder', $data)
+                || array_key_exists('nomor_rak', $data)
+                || array_key_exists('ruang_simpan', $data)
+                || array_key_exists('keterangan_posisi', $data);
+
+            if (in_array($tipeBaru, ['Fisik', 'Hibrida'], true)) {
+                $existing = $arsip->lokasiArsipFisik;
+                $nomorBinder = $data['nomor_binder'] ?? $existing?->nomor_binder;
+                $nomorRak = $data['nomor_rak'] ?? $existing?->nomor_rak;
+                $ruangSimpan = $data['ruang_simpan'] ?? $existing?->ruang_simpan;
+
+                if ($hasLocationPayload || ! $existing) {
+                    if (empty($nomorBinder) || empty($nomorRak) || empty($ruangSimpan)) {
+                        throw ValidationException::withMessages([
+                            'lokasi_arsip' => 'Nomor binder, nomor rak, dan ruang simpan wajib diisi untuk arsip Fisik atau Hibrida.',
+                        ]);
+                    }
+
+                    $arsip->lokasiArsipFisik()->updateOrCreate(
+                        ['id_arsip' => $arsip->id_arsip],
+                        [
+                            'nomor_binder' => $nomorBinder,
+                            'nomor_rak' => $nomorRak,
+                            'ruang_simpan' => $ruangSimpan,
+                            'keterangan_posisi' => array_key_exists('keterangan_posisi', $data)
+                                ? $data['keterangan_posisi']
+                                : $existing?->keterangan_posisi,
+                        ]
+                    );
+                }
+            }
+
+            $arsip = $arsip->fresh(['lokasiArsipFisik', 'proyek', 'pencatat']);
+            $lokasi = $arsip?->lokasiArsipFisik;
+
+            return [
+                'arsip' => $arsip,
+                'koordinat_label' => $lokasi
+                    ? "{$lokasi->ruang_simpan}/{$lokasi->nomor_rak}/{$lokasi->nomor_binder}"
+                    : 'DIGITAL-ONLY',
+            ];
+        });
     }
 
     /**

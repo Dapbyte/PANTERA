@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -39,11 +40,10 @@ class User extends Authenticatable
         'password_hash',
         'peran',
         'status_aktif',
+        'must_change_password',
         'lokasi_tugas',
         'nomor_kontak',
         'divisi',
-        'batas_verifikasi_kas',
-        'batas_approval_nominal',
     ];
 
     /**
@@ -54,6 +54,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password_hash',
         'remember_token',
+        'batas_verifikasi_kas',
+        'batas_approval_nominal',
     ];
 
     /**
@@ -73,8 +75,7 @@ class User extends Authenticatable
     {
         return [
             'status_aktif' => 'boolean',
-            'batas_verifikasi_kas' => 'decimal:2',
-            'batas_approval_nominal' => 'decimal:2',
+            'must_change_password' => 'boolean',
             'password_hash' => 'hashed',
         ];
     }
@@ -95,6 +96,51 @@ class User extends Authenticatable
     public function isDirektur(): bool
     {
         return $this->peran === 'Direktur';
+    }
+
+    /**
+     * Cek apakah user diizinkan mengakses suatu proyek (GLB-14).
+     */
+    public function canAccessProyek(int $idProyek): bool
+    {
+        if (! $this->isAdminLapangan()) {
+            return true;
+        }
+
+        return $this->proyekAkses()
+            ->where('proyek.id_proyek', $idProyek)
+            ->exists();
+    }
+
+    /**
+     * Daftar ID proyek yang boleh diakses Admin Lapangan (atau null untuk Direktur/Keuangan).
+     *
+     * @return list<int>|null
+     */
+    public function allowedProyekIds(): ?array
+    {
+        if (! $this->isAdminLapangan()) {
+            return null;
+        }
+
+        return $this->proyekAkses()
+            ->pluck('proyek.id_proyek')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Relasi akses proyek khusus Admin Lapangan (GLB-14).
+     */
+    public function proyekAkses(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Proyek::class,
+            'proyek_pengguna',
+            'id_pengguna',
+            'id_proyek'
+        )->withTimestamps();
     }
 
     /**
@@ -127,5 +173,13 @@ class User extends Authenticatable
     public function progresDilaporkan(): HasMany
     {
         return $this->hasMany(ProgresFisik::class, 'id_pelapor', 'id_pengguna');
+    }
+
+    /**
+     * Relasi ke status pembacaan notifikasi per modul.
+     */
+    public function notifikasiBaca(): HasMany
+    {
+        return $this->hasMany(NotifikasiBaca::class, 'id_pengguna', 'id_pengguna');
     }
 }

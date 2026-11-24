@@ -113,9 +113,15 @@ class EarlyWarningService
                 'deskripsi_kendala' => $k->deskripsi_kendala,
                 'estimasi_hari_tertunda' => (int) $k->estimasi_hari_tertunda,
                 'tanggal_kejadian' => Tanggal::format($k->tanggal_kejadian),
+                'path_foto' => $k->path_foto,
+                'foto_paths' => $k->foto_paths ?? ($k->path_foto ? [$k->path_foto] : []),
             ])->values()->all(),
             'faktor_penyebab' => [],
-            'kurva_s' => ['target' => [], 'realisasi' => $this->kurvaRealisasi($laporan)],
+            'kurva_s' => [
+                'target' => [],
+                'target_proyek' => $this->kurvaTargetProyek($proyek, $termins),
+                'realisasi' => $this->kurvaRealisasi($laporan),
+            ],
         ];
 
         // Tidak ada termin yang masih bergantung pada kerja lapangan: tidak ada risiko tersisa.
@@ -294,6 +300,32 @@ class EarlyWarningService
         }
 
         return ((float) $akhir->persentase_realisasi - (float) $awal->persentase_realisasi) / $hari;
+    }
+
+    /**
+     * Titik target kurva S lengkap sepanjang proyek (mulai 0% -> tiap tenggat termin).
+     *
+     * @param  Collection<int, Termin>  $termins
+     * @return array<int, array{tanggal: string|null, persentase: float}>
+     */
+    protected function kurvaTargetProyek(Proyek $proyek, Collection $termins): array
+    {
+        if ($termins->isEmpty()) {
+            return [];
+        }
+
+        $points = [
+            ['tanggal' => Tanggal::format($proyek->tanggal_mulai), 'persentase' => 0.0],
+        ];
+
+        foreach ($termins as $t) {
+            $points[] = [
+                'tanggal' => Tanggal::format($t->tenggat_waktu),
+                'persentase' => round((float) $t->target_persentase, 2),
+            ];
+        }
+
+        return $points;
     }
 
     /**

@@ -12,7 +12,7 @@ return [
     'dokumen_termin_wajib' => [
         'laporan_mingguan' => 'Laporan mingguan kemajuan fisik',
         'backup_hitungan' => 'Back-up data hitungan volume',
-        'foto_progres' => 'Foto progres pekerjaan lapangan',
+        'foto_progres' => 'Dokumentasi foto progres (lampiran berkas dinas)',
         'berita_acara' => 'Berita acara kemajuan pekerjaan',
     ],
 

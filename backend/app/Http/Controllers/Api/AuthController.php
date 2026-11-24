@@ -23,7 +23,9 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $validated['email'])->first();
+        $user = User::with('proyekAkses:id_proyek,kode_proyek,nama_proyek')
+            ->where('email', $validated['email'])
+            ->first();
 
         // Cek kredensial
         if (! $user || ! Hash::check($validated['password'], $user->password_hash)) {
@@ -46,12 +48,12 @@ class AuthController extends Controller
                 'nama' => $user->nama,
                 'email' => $user->email,
                 'peran' => $user->peran,
-                'status_aktif' => $user->status_aktif,
+                'status_aktif' => (bool) $user->status_aktif,
+                'must_change_password' => (bool) $user->must_change_password,
                 'lokasi_tugas' => $user->lokasi_tugas,
                 'nomor_kontak' => $user->nomor_kontak,
                 'divisi' => $user->divisi,
-                'batas_verifikasi_kas' => $user->batas_verifikasi_kas,
-                'batas_approval_nominal' => $user->batas_approval_nominal,
+                'proyek_akses' => $user->proyekAkses,
             ],
         ], 'Login berhasil.');
     }
@@ -71,7 +73,9 @@ class AuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
-        return $this->successResponse($request->user(), 'Data profil pengguna.');
+        $user = $request->user()->load('proyekAkses:id_proyek,kode_proyek,nama_proyek');
+
+        return $this->successResponse($user, 'Data profil pengguna.');
     }
 
     /**
@@ -91,11 +95,60 @@ class AuthController extends Controller
 
         if (! empty($validated['password'])) {
             $validated['password_hash'] = Hash::make($validated['password']);
+            $validated['must_change_password'] = false;
             unset($validated['password']);
         }
 
         $user->update($validated);
 
-        return $this->successResponse($user->fresh(), 'Profil berhasil diperbarui.');
+        return $this->successResponse(
+            $user->fresh(['proyekAkses:id_proyek,kode_proyek,nama_proyek']),
+            'Profil berhasil diperbarui.'
+        );
+    }
+
+    /**
+     * Mengganti password pengguna (wajib saat login pertama dengan password sementara - GLB-13).
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $rules = [
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ];
+
+        if (! $user->must_change_password) {
+            $rules['current_password'] = ['required', 'string'];
+        } else {
+            $rules['current_password'] = ['nullable', 'string'];
+        }
+
+        $validated = $request->validate($rules, [
+            'password.required' => 'Kata sandi baru wajib diisi.',
+            'password.min' => 'Kata sandi baru minimal 6 karakter.',
+            'password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
+            'current_password.required' => 'Kata sandi saat ini wajib diisi.',
+        ]);
+
+        if (
+            ! empty($validated['current_password'])
+            && ! Hash::check($validated['current_password'], $user->password_hash)
+        ) {
+            return $this->errorResponse('Kata sandi saat ini tidak sesuai.', 422, [
+                'current_password' => ['Kata sandi saat ini tidak sesuai.'],
+            ]);
+        }
+
+        $user->update([
+            'password_hash' => Hash::make($validated['password']),
+            'must_change_password' => false,
+        ]);
+
+        return $this->successResponse(
+            $user->fresh(['proyekAkses:id_proyek,kode_proyek,nama_proyek']),
+            'Kata sandi berhasil diperbarui.'
+        );
     }
 }

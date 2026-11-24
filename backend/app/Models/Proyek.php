@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -64,5 +65,20 @@ class Proyek extends Model
     public function progresFisik(): HasMany
     {
         return $this->hasMany(ProgresFisik::class, 'id_proyek', 'id_proyek');
+    }
+
+    public function fasilitasKredit(): HasMany
+    {
+        return $this->hasMany(FasilitasKredit::class, 'id_proyek', 'id_proyek');
+    }
+
+    public function adminLapanganAkses(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'proyek_pengguna',
+            'id_proyek',
+            'id_pengguna'
+        )->withTimestamps();
     }
 }

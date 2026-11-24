@@ -35,4 +35,29 @@ class Rab extends Model
     {
         return $this->belongsTo(Proyek::class, 'id_proyek', 'id_proyek');
     }
+
+    /**
+     * Memeriksa apakah sisa pagu RAB mencukupi untuk nominal belanja tertentu.
+     */
+    public function cekKetersediaanPagu(float $nominal): bool
+    {
+        return $this->getSisaPagu() >= $nominal;
+    }
+
+    /**
+     * Memotong sisa pagu RAB sesuai realisasi belanja yang telah disetujui.
+     */
+    public function updateRealisasi(float $nominal): void
+    {
+        $sisaBaru = max(0.0, round($this->getSisaPagu() - $nominal, 2));
+        $this->update(['sisa_pagu' => $sisaBaru]);
+    }
+
+    /**
+     * Mengambil nilai numerik sisa pagu RAB saat ini.
+     */
+    public function getSisaPagu(): float
+    {
+        return (float) $this->sisa_pagu;
+    }
 }

@@ -29,6 +29,7 @@ class KendalaLapangan extends Model
         'tanggal_resolved',
         'catatan_penyelesaian',
         'path_foto',
+        'foto_paths',
     ];
 
     protected function casts(): array
@@ -37,6 +38,7 @@ class KendalaLapangan extends Model
             'tanggal_kejadian' => 'date:Y-m-d',
             'tanggal_resolved' => 'date:Y-m-d',
             'estimasi_hari_tertunda' => 'integer',
+            'foto_paths' => 'array',
         ];
     }
 

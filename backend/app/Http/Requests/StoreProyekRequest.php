@@ -31,6 +31,8 @@ class StoreProyekRequest extends FormRequest
             'tanggal_mulai' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
             'total_pagu' => ['required', 'numeric', 'gte:0'],
+            'admin_lapangan_ids' => ['sometimes', 'array'],
+            'admin_lapangan_ids.*' => ['integer', 'exists:pengguna,id_pengguna'],
             'termin' => ['required', 'array', 'min:1'],
             'termin.*.nomor_termin' => ['required', 'integer', 'min:1'],
             'termin.*.target_persentase' => ['required', 'numeric', 'min:0', 'max:100'],
