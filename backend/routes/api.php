@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\EarlyWarningController;
 use App\Http\Controllers\Api\KendalaController;
+use App\Http\Controllers\Api\MaterialController;
 use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\TerminController;
@@ -85,4 +86,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:Direktur,SekretarisKeuangan')->group(function () {
         Route::get('/early-warning', [EarlyWarningController::class, 'index']);
     });
+});
+
+// Pengajuan material (UC-07)
+Route::middleware(['auth:sanctum', 'role:AdminLapangan'])->group(function () {
+    Route::post('/material-requests', [MaterialController::class, 'store']);
+});
+
+// Validasi pengajuan material oleh Keuangan (UC-03)
+Route::middleware(['auth:sanctum', 'role:SekretarisKeuangan'])->group(function () {
+    Route::patch('/material-requests/{id_request}/validate', [MaterialController::class, 'validateFinance'])
+        ->whereNumber('id_request');
+});
+
+// Persetujuan pengajuan material oleh Direktur (UC-01)
+Route::middleware(['auth:sanctum', 'role:Direktur'])->group(function () {
+    Route::patch('/material-requests/{id_request}/approve', [MaterialController::class, 'approve'])
+        ->whereNumber('id_request');
 });
