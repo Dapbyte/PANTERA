@@ -1,75 +1,39 @@
-# React + TypeScript + Vite
+# PANTERA Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Antarmuka web untuk **PANTERA** (*Pemantauan Arsip, Termin, dan Risiko*) milik PT. Djasipa Mitra Perkasa—menyediakan dashboard dan alur kerja terintegrasi bagi **Direktur**, **Sekretaris / Keuangan**, serta **Admin Lapangan**.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Core:** React 19, TypeScript, Vite 8, Tailwind CSS v4
+- **Routing & State:** React Router v8, TanStack Query v5 (sinkronisasi realtime & notifikasi badge)
+- **Form, Chart & UI:** React Hook Form + Zod, Recharts (Kurva S & grafik risiko), Lucide React
+- **PWA & Testing:** `vite-plugin-pwa`, Vitest + `@testing-library/react`
 
-## React Compiler
+## Konfigurasi Environment & Proxy
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Sesuaikan variabel berikut pada `frontend/.env` (atau lewat `compose.yaml` saat menjalankan via Docker):
 
-## Expanding the ESLint configuration
+| Variabel | Default | Keterangan |
+| :--- | :--- | :--- |
+| `VITE_API_BASE_URL` | `/api` | Base URL request API dari browser |
+| `API_PROXY_TARGET` | `http://127.0.0.1:8000` | Target proxy Vite untuk `/api` dan `/storage` (di Docker: `http://backend:8000`) |
+| `FRONTEND_PORT` | `5173` | Port dev server Vite |
+| `VITE_USE_POLLING` | `false` | Set `true` di Docker Windows agar HMR tetap aktif via bind mount |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Konfigurasi pada `vite.config.ts` meneruskan endpoint `/api` dan berkas media `/storage` langsung ke server backend Laravel serta membundel manifest & service worker PWA.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Perintah Pengembangan
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Jalankan perintah berikut dari folder `frontend/` (atau via `docker compose exec frontend ...`):
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Perintah | Fungsi |
+| :--- | :--- |
+| `npm run dev` | Menjalankan dev server Vite dengan HMR |
+| `npm run lint` | Menjalankan pengecekan ESLint di seluruh proyek |
+| `npm test` | Menjalankan suite unit & component test Vitest |
+| `npm run build` | Memeriksa tipe TypeScript (`tsc -b`) dan membangun bundle produksi + PWA |
+| `npm run preview` | Menjalankan preview hasil build produksi secara lokal |
 
-```
+## Panduan Setup Lengkap
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+Untuk instruksi lengkap menjalankan keseluruhan aplikasi menggunakan Docker maupun secara manual (termasuk backend Laravel, migrasi database, *seeding*, `storage:link`, dan daftar akun login default), lihat **[README utama](../README.md)**.

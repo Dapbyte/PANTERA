@@ -12,6 +12,7 @@
   <img src="https://img.shields.io/badge/Frontend-React%2019%20%2B%20TS-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React and TypeScript frontend" />
   <img src="https://img.shields.io/badge/Database-MySQL%208.4-4479A1?style=flat-square&logo=mysql&logoColor=white" alt="MySQL 8.4 database" />
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker Compose" />
+  <img src="https://img.shields.io/badge/PWA-Ready-5A0FC8?style=flat-square&logo=pwa&logoColor=white" alt="PWA Ready" />
 </p>
 
 ---
@@ -19,10 +20,12 @@
 ## Navigasi Cepat
 
 - [Tentang PANTERA](#-tentang-pantera)
+- [Fitur Utama](#-fitur-utama)
 - [Struktur Repository & Tech Stack](#-struktur-repository--tech-stack)
 - [Persiapan Awal (Install Tools)](#-persiapan-awal-install-tools)
 - [Cara Menjalankan dengan Docker (Direkomendasikan)](#-cara-menjalankan-dengan-docker-direkomendasikan)
 - [Cara Menjalankan Tanpa Docker (Manual Lokal)](#-cara-menjalankan-tanpa-docker-manual-lokal)
+- [Akun Default (Seeder)](#-akun-default-seeder)
 - [Verifikasi & Testing](#-verifikasi--testing)
 - [Perintah Harian Docker](#-perintah-harian-docker)
 - [Troubleshooting (Jika Terjadi Error)](#-troubleshooting-jika-terjadi-error)
@@ -31,13 +34,24 @@
 
 ## 📖 Tentang PANTERA
 
-**PANTERA** adalah sistem informasi monorepo untuk memantau dan mengendalikan aktivitas proyek konstruksi pada **PT. Djasipa Mitra Perkasa**. Aplikasi ini menghubungkan operasional di lapangan dengan manajemen kantor pusat—mencakup pengajuan material terhadap pagu RAB, pencatatan progres fisik & kendala, *early warning* keterlambatan termin, penagihan, serta pelacakan arsip fisik dan digital.
+**PANTERA** adalah sistem informasi monorepo untuk memantau dan mengendalikan aktivitas proyek konstruksi pada **PT. Djasipa Mitra Perkasa**. Aplikasi ini menghubungkan operasional di lapangan dengan manajemen kantor pusat—mencakup alur pengajuan material 3 peran terhadap pagu RAB, pencatatan progres fisik & kendala multi-foto, *early warning* Kurva S & keterlambatan termin, verifikasi berkas & penagihan SP2D, fasilitas kredit bank, serta pelacakan arsip fisik dan digital.
 
 | Aktor | Peran Utama |
 | :--- | :--- |
-| **Direktur** | Registrasi proyek, kontrak, RAB, jadwal termin, dan persetujuan akhir material. |
-| **Sekretaris / Keuangan** | Validasi pengajuan terhadap RAB & kas/kredit, pemantauan termin, dan penagihan ke dinas. |
-| **Admin Lapangan** | Pengajuan material, input progres fisik & foto, laporan kendala, bukti termin, dan pencatatan arsip. |
+| **Direktur** | Registrasi & ubah proyek, kontrak, pagu RAB, jadwal termin (auto-hitung `%`), atur penugasan proyek per Admin Lapangan, kelola akun pekerja (sandi sementara otomatis, wajib ganti sandi perdana, ubah peran, hapus), persetujuan akhir pengajuan material & PO (tanpa batas nominal), pemantauan progres/kendala/risiko, serta pengelolaan penuh arsip (termasuk hapus). |
+| **Sekretaris / Keuangan** | Review pengajuan material dari lapangan (input ketersediaan vendor, vendor pengganti, harga satuan, skema Kas/Kredit), verifikasi 4 berkas checklist termin dengan pratinjau dokumen inline, pemantauan Kurva S & *Early Warning*, penagihan ke Dinas / koreksi / pencatatan SP2D, kelola fasilitas kredit & Mitra Bank dinamis, ekspor laporan performa `.xlsx`, serta pencatatan arsip. |
+| **Admin Lapangan** | Akses proyek terbatas sesuai penugasan Direktur, pengajuan kebutuhan material (volume & satuan tanpa melihat/input nominal harga), input progres fisik & laporan kendala dengan multi-foto (kamera/galeri) serta prakiraan cuaca 7 hari, unggah 4 berkas checklist termin, dan pencatatan arsip (*append-only* & ubah lokasi fisik tanpa izin hapus). |
+
+---
+
+## ✨ Fitur Utama
+
+- **Alur Pengajuan Material 3-Peran & Peringatan Over-RAB:** Admin Lapangan mengajukan item dan volume kebutuhan lapangan → Sekretaris/Keuangan melengkapi ketersediaan vendor, vendor pengganti, harga satuan, dan sumber dana (`Kas` / `Kredit`) dengan deteksi otomatis **Over-RAB** terhadap pagu → Direktur memberikan persetujuan akhir atau penolakan.
+- **Progres Fisik, Kendala Multi-Foto & Prakiraan Cuaca:** Pencatatan progres kumulatif dan laporan kendala proyek dengan lampiran beberapa foto sekaligus (langsung dari kamera maupun galeri) serta informasi prakiraan cuaca 7 hari.
+- **Checklist Termin, Verifikasi Berkas & Penagihan SP2D:** Pengunggahan 4 dokumen wajib termin oleh lapangan, pratinjau file inline dan verifikasi per berkas oleh Keuangan, hingga alur pengajuan tagihan ke Dinas, koreksi berkas, dan pencatatan pencairan SP2D.
+- **Early Warning Kurva S, Kredit Bank & Ekspor `.xlsx`:** Pemantauan deviasi progres (Kurva S) dan risiko keterlambatan termin, pencatatan fasilitas kredit perbankan dengan daftar Mitra Bank yang dapat dikelola secara dinamis, serta ekspor laporan performa proyek ke format `.xlsx`.
+- **Arsip Hibrida (Fisik & Digital) Bergaya Folder:** Organisasi arsip berbasis folder dan filter proyek, pratinjau dokumen PDF/gambar inline dengan zoom, pencatatan lokasi rak/ordner fisik, serta batasan hak akses per peran.
+- **Realtime Sync, Notifikasi Badge & Dukungan PWA:** Sinkronisasi otomatis melalui TanStack Query, badge notifikasi lintas peran, kontrol akses berbasis peran (RBAC) + penugasan proyek, dan dukungan *Progressive Web App* (`vite-plugin-pwa`).
 
 ---
 
@@ -45,17 +59,25 @@
 
 ```text
 PANTERA/
-├── backend/            # Laravel 13 REST API (PHP 8.3+, Sanctum, Pest)
-│   ├── docker/         # Dockerfile backend (PHP 8.5 + Composer 2)
-│   ├── routes/api.php  # Endpoint API (termasuk /api/health)
-│   └── .env.example    # Template konfigurasi Laravel
-├── frontend/           # React 19 + TypeScript + Vite 8 + Tailwind CSS v4
-│   ├── Dockerfile      # Dockerfile frontend (Node 24 + npm 11)
-│   └── vite.config.ts  # Konfigurasi dev server & proxy /api
-├── compose.yaml        # Orkestrasi service db (MySQL 8.4), backend, frontend
-├── .env.example        # Template port & kredensial MySQL untuk Docker Compose
+├── backend/                     # Laravel 13 REST API (PHP >= 8.3, Sanctum)
+│   ├── docker/                  # Dockerfile backend (PHP 8.5 + Composer 2)
+│   ├── database/seeders/        # DatabaseSeeder.php (3 akun default & 5 Mitra Bank)
+│   ├── public/router.php        # Router static file /storage untuk PHP built-in server
+│   ├── routes/api.php           # Endpoint API (auth, proyek, material, termin, arsip, /api/health)
+│   ├── tests/                   # Automated tests (Pest 5 + Larastan/PHPStan + Pint)
+│   └── .env.example             # Template konfigurasi Laravel
+├── frontend/                    # React 19 + TypeScript + Vite 8 + Tailwind CSS v4 + PWA
+│   ├── Dockerfile               # Dockerfile frontend (Node 24 + npm 11)
+│   ├── src/                     # Halaman per peran, komponen UI, React Query hooks, ekspor .xlsx
+│   ├── tests/                   # Unit & component tests (Vitest + Testing Library)
+│   └── vite.config.ts           # Konfigurasi dev server, plugin PWA, serta proxy /api & /storage
+├── compose.yaml                 # Orkestrasi service db (MySQL 8.4), backend, frontend
+├── .env.example                 # Template port & kredensial MySQL untuk Docker Compose
 └── README.md
 ```
+
+- **Backend:** Laravel 13 (`PHP >= 8.3`), Laravel Sanctum, Pest 5, Larastan (PHPStan), dan Laravel Pint.
+- **Frontend:** React 19, TypeScript, Vite 8, Tailwind CSS v4, React Router v8, TanStack Query v5, React Hook Form + Zod, Recharts, Lucide React, `vite-plugin-pwa`, dan Vitest.
 
 ---
 
@@ -143,14 +165,18 @@ docker compose up -d --build
 > ```
 > Tunggu hingga muncul log `PHP 8.5.12 Development Server (http://0.0.0.0:8000) started` (tekan `Ctrl + C` untuk keluar dari tampilan log tanpa mematikan container).
 
-### Langkah 4: Generate App Key & Migrasi Database
+### Langkah 4: Generate App Key, Storage Link, Migrasi & Seeder
 
 Setelah container `backend` selesai menginstal dependency:
 
 ```bash
 docker compose exec backend php artisan key:generate
-docker compose exec backend php artisan migrate
+docker compose exec backend php artisan storage:link
+docker compose exec backend php artisan migrate --seed
 ```
+
+> [!NOTE]
+> Perintah `--seed` mengisi 3 akun awal aplikasi serta 5 Mitra Bank default. Untuk mereset database lokal ke kondisi awal yang bersih, jalankan `docker compose exec backend php artisan migrate:fresh --seed`.
 
 ### Langkah 5: Akses Aplikasi
 
@@ -193,10 +219,11 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-Jalankan migrasi dan server backend:
+Buat *storage link*, jalankan migrasi beserta seeder, lalu nyalakan server backend:
 
 ```bash
-php artisan migrate
+php artisan storage:link
+php artisan migrate --seed
 php artisan serve
 ```
 
@@ -217,7 +244,7 @@ Buat file `frontend/.env` dan isi dengan:
 VITE_API_BASE_URL=/api
 ```
 
-Pastikan `frontend/vite.config.ts` mengarahkan proxy `/api` ke `http://127.0.0.1:8000`, lalu jalankan frontend:
+Pastikan `frontend/vite.config.ts` mengarahkan proxy `/api` dan `/storage` ke `http://127.0.0.1:8000`, lalu jalankan frontend:
 
 ```bash
 npm run dev
@@ -227,30 +254,55 @@ Buka [http://localhost:5173](http://localhost:5173) di browser.
 
 ---
 
+## 🔑 Akun Default (Seeder)
+
+Menjalankan `php artisan migrate --seed` akan mengisi akun demo awal dari `backend/database/seeders/DatabaseSeeder.php`:
+
+| Peran | Nama | Email | Password Default |
+| :--- | :--- | :--- | :--- |
+| **Direktur** | Daniel Sipahutar | `direktur@pantera.id` | `password123` |
+| **Sekretaris / Keuangan** | Rita | `keuangan@pantera.id` | `password123` |
+| **Admin Lapangan** | Odd Dellarobia | `lapangan@pantera.id` | `password123` |
+
+Selain akun pengguna, `DatabaseSeeder` juga mengisi 5 **Mitra Bank** default untuk fasilitas kredit konstruksi: `Bank BNI`, `Bank BCA`, `Bank BRI`, `Bank BTN`, dan `Bank Jatim`.
+
+---
+
 ## ✅ Verifikasi & Testing
 
-Setelah menjalankan aplikasi (baik via Docker maupun Manual), pastikan koneksi Frontend ↔ Backend berjalan normal:
+Setelah menjalankan aplikasi (baik via Docker maupun Manual), lakukan verifikasi koneksi serta pengujian otomatis:
 
-1. **Cek lewat Browser:** Buka [http://localhost:5173](http://localhost:5173). Halaman harus menampilkan **Koneksi Test** dengan JSON:
-   ```json
-   {
-     "status": "success",
-     "message": "PANTERA API is running"
-   }
-   ```
+1. **Cek lewat Browser:** Buka [http://localhost:5173](http://localhost:5173). Pastikan halaman **Login PANTERA** tampil tanpa error di Console/Network, lalu coba masuk menggunakan salah satu akun default di atas (misalnya `direktur@pantera.id` / `password123`) untuk mengakses dashboard sesuai peran.
 2. **Cek lewat Terminal (`curl`):**
    ```bash
    curl -i http://127.0.0.1:8000/api/health
    curl -i http://localhost:5173/api/health
    ```
-   Pastikan header respons memuat `Content-Type: application/json` dan status `200 OK`.
-3. **Menjalankan Automated Test Backend (Pest):**
+   Pastikan header respons memuat `Content-Type: application/json`, status `200 OK`, dan payload `{"status":"success","message":"PANTERA API is running"}`.
+3. **Automated Test & CI Backend (Pint, PHPStan & Pest):**
+   ```bash
+   # Menjalankan pengecekan lengkap CI (Pint --test, Larastan/PHPStan, dan Pest — 98 tests):
+   # Jika menggunakan Docker:
+   docker compose exec backend composer ci:check
+   # Jika menggunakan Manual Lokal (dari folder backend/):
+   composer ci:check
+
+   # Atau hanya menjalankan suite test Pest:
+   docker compose exec backend php artisan test
+   # Manual Lokal:
+   php artisan test
+   ```
+4. **Lint, Unit Test & Production Build Frontend (ESLint, Vitest & Vite PWA):**
    ```bash
    # Jika menggunakan Docker:
-   docker compose exec backend php artisan test
+   docker compose exec frontend npm run lint
+   docker compose exec frontend npm test
+   docker compose exec frontend npm run build
 
-   # Jika menggunakan Manual Lokal:
-   php artisan test
+   # Jika menggunakan Manual Lokal (dari folder frontend/):
+   npm run lint    # ESLint
+   npm test        # Vitest (6 file / 18 tests)
+   npm run build   # Pengecekan TypeScript (tsc -b) + production & PWA build
    ```
 
 ---
@@ -355,6 +407,28 @@ Klik gejala error yang muncul di bawah ini untuk melihat penyebab dan solusinya.
   FRONTEND_PORT=5174
   ```
   Lalu jalankan ulang `docker compose up -d`.
+
+</details>
+
+<details>
+<summary><strong>6. Foto progres/kendala atau file arsip tidak tampil (<code>404</code> pada <code>/storage/...</code>)</strong></summary>
+
+- **Penyebab:** Symlink `backend/public/storage` belum dibuat, PHP built-in server dijalankan tanpa `public/router.php`, atau proxy `/storage` di frontend belum aktif.
+- **Solusi:**
+  1. Pastikan *storage link* sudah dibuat:
+     ```bash
+     # Jika menggunakan Docker:
+     docker compose exec backend php artisan storage:link
+
+     # Jika menggunakan Manual Lokal (di folder backend/):
+     php artisan storage:link
+     ```
+  2. Pastikan `compose.yaml` menjalankan PHP built-in server dengan router script:
+     ```text
+     php -S 0.0.0.0:8000 -t public public/router.php
+     ```
+     *(Untuk Manual Lokal, `php artisan serve` otomatis menangani file publik di `public/`).*
+  3. Pastikan `frontend/vite.config.ts` sudah mem-proxy baik `/api` maupun `/storage` ke target backend (`http://127.0.0.1:8000` di lokal atau `http://backend:8000` di Docker).
 
 </details>
 
