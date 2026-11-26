@@ -3,133 +3,185 @@ import './PanteraIntroSplash.css';
 
 export const INTRO_SEEN_KEY = 'pantera_intro_seen';
 
-const INTRO_VIDEO_SRC = '/intro/PANTERA_DMP_intro_v5.mp4';
-const BLUE_PHASE_TIME_S = 3.35;
-const EXIT_FADE_MS = 400;
-const AUTOPLAY_CHECK_MS = 2500;
-const SAFETY_MAX_MS = 6500;
+const INTRO_ASSETS = [
+  '/intro/PANTERA_blue.png',
+  '/intro/PANTERA_white.png',
+  '/intro/DJASIPA_blue.png',
+  '/intro/DJASIPA_white.png',
+] as const;
+
+const TOTAL_DURATION_MS = 5000;
+const PRELOAD_TIMEOUT_MS = 350;
 
 export interface PanteraIntroSplashProps {
   onComplete: () => void;
   forcePlay?: boolean;
 }
 
+function IntroSceneLayer({ variant }: { variant: 'light' | 'blue' }) {
+  const isBlue = variant === 'blue';
+  const panteraSrc = isBlue ? '/intro/PANTERA_white.png' : '/intro/PANTERA_blue.png';
+  const djasipaSrc = isBlue ? '/intro/DJASIPA_white.png' : '/intro/DJASIPA_blue.png';
+
+  return (
+    <div
+      className={`pantera-intro-layer pantera-intro-layer--${variant}`}
+      aria-hidden={isBlue ? true : undefined}
+    >
+      <div className="pantera-intro-composition">
+        <div className="pantera-upper-block">
+          <div className="pantera-lockup-row">
+            <div className="pantera-p-scale-wrap">
+              <div className="pantera-p-roar-wrap">
+                <div className="pantera-p-aura" />
+                <img
+                  src={panteraSrc}
+                  alt={isBlue ? '' : 'PANTERA'}
+                  className="pantera-p-img"
+                  decoding="sync"
+                />
+
+                {/* Kilatan mata pada x=66.5%, y=20.5% */}
+                <svg className="pantera-eye-glint" viewBox="0 0 32 32" aria-hidden="true">
+                  <path
+                    d="M16 1 L18.4 13.6 L31 16 L18.4 18.4 L16 31 L13.6 18.4 L1 16 L13.6 13.6 Z"
+                    fill="#FFFFFF"
+                  />
+                </svg>
+
+                {/* 3 Gelombang kejut auman (-42°..+52°) */}
+                <svg className="pantera-roar-arcs" viewBox="0 0 96 96" aria-hidden="true">
+                  <path
+                    className="pantera-roar-arc pantera-roar-arc--1"
+                    d="M 33 34 A 20 20 0 0 1 30 62"
+                    strokeWidth="2.6"
+                  />
+                  <path
+                    className="pantera-roar-arc pantera-roar-arc--2"
+                    d="M 46 24 A 34 34 0 0 1 40 72"
+                    strokeWidth="2.2"
+                  />
+                  <path
+                    className="pantera-roar-arc pantera-roar-arc--3"
+                    d="M 59 15 A 48 48 0 0 1 51 82"
+                    strokeWidth="1.8"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <span className="pantera-antera-text">ANTERA</span>
+          </div>
+
+          <div className="pantera-subtitle-mask">
+            <span className="pantera-subtitle-text">Pemantauan Arsip Termin Risiko</span>
+          </div>
+        </div>
+
+        <div className="pantera-lower-block">
+          <div className="pantera-divider" />
+
+          <div className="pantera-powered-mask">
+            <span className="pantera-powered-text">POWERED BY</span>
+          </div>
+
+          <div className="pantera-dmp-logo-wrap">
+            <img
+              src={djasipaSrc}
+              alt={isBlue ? '' : 'DMP'}
+              className="pantera-dmp-img"
+              decoding="sync"
+            />
+          </div>
+
+          <div className="pantera-company-mask">
+            <span className="pantera-company-text">PT Djasipa Mitra Perkasa</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
- * Splash intro 5 detik berbasis video 60fps PANTERA × DMP dengan radial blue wipe
- * untuk safe-zone mobile, fallback bila autoplay terblokir, dan tombol Lewati.
+ * Splash intro 5,0 detik PANTERA × DMP berbasis animasi kode murni (CSS Keyframes + SVG + PNG),
+ * tanpa file video dan tanpa freeze pada pengaturan reduce-motion OS.
  */
 export function PanteraIntroSplash({ onComplete, forcePlay = false }: PanteraIntroSplashProps) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [ready, setReady] = useState(false);
   const completedRef = useRef(false);
-  const exitingRef = useRef(false);
-  const playbackStartedRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
-
-  const [isBluePhase, setIsBluePhase] = useState(false);
-  const [isExiting, setIsExiting] = useState(false);
-  const [useFallback, setUseFallback] = useState(false);
-  const [showSkip, setShowSkip] = useState(false);
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  const finishImmediate = useCallback(() => {
+  const finishIntro = useCallback(() => {
     if (completedRef.current) return;
     completedRef.current = true;
     try {
       window.sessionStorage.setItem(INTRO_SEEN_KEY, '1');
     } catch {
-      // Abaikan jika sessionStorage dibatasi
+      // Abaikan bila storage dibatasi
     }
     onCompleteRef.current();
   }, []);
 
-  const triggerExit = useCallback(() => {
-    if (completedRef.current || exitingRef.current) return;
-    exitingRef.current = true;
-    setIsExiting(true);
-    window.setTimeout(finishImmediate, EXIT_FADE_MS);
-  }, [finishImmediate]);
-
-  // Lewati otomatis jika sudah pernah diputar pada tab/sesi ini
   useEffect(() => {
     if (forcePlay || typeof window === 'undefined') return;
     try {
       if (window.sessionStorage.getItem(INTRO_SEEN_KEY) === '1') {
-        finishImmediate();
+        finishIntro();
       }
     } catch {
-      // Lanjut putar jika storage tidak tersedia
+      // Abaikan bila storage tidak tersedia
     }
-  }, [finishImmediate, forcePlay]);
+  }, [finishIntro, forcePlay]);
 
-  // Pastikan tombol Lewati muncul setelah ~0.6 detik
   useEffect(() => {
-    const skipTimer = window.setTimeout(() => setShowSkip(true), 600);
-    return () => window.clearTimeout(skipTimer);
+    let settled = false;
+    let remaining = INTRO_ASSETS.length;
+
+    const markReady = () => {
+      if (settled) return;
+      settled = true;
+      setReady(true);
+    };
+
+    const timeoutId = window.setTimeout(markReady, PRELOAD_TIMEOUT_MS);
+
+    const onAssetDone = () => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        window.clearTimeout(timeoutId);
+        markReady();
+      }
+    };
+
+    INTRO_ASSETS.forEach((src) => {
+      const img = new window.Image();
+      img.onload = onAssetDone;
+      img.onerror = onAssetDone;
+      img.src = src;
+    });
+
+    return () => {
+      settled = true;
+      window.clearTimeout(timeoutId);
+    };
   }, []);
 
-  // Pastikan autoplay muted berjalan di semua browser, atau fallback jika genuinely diblokir
   useEffect(() => {
-    const video = videoRef.current;
-    if (video) {
-      video.muted = true;
-      video.defaultMuted = true;
-      const playPromise = video.play?.();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(() => {
-          setUseFallback(true);
-        });
-      }
-    }
-
-    const autoplayWatchdog = window.setTimeout(() => {
-      if (!playbackStartedRef.current && !exitingRef.current) {
-        setUseFallback(true);
-      }
-    }, AUTOPLAY_CHECK_MS);
-
-    const safetyCeiling = window.setTimeout(triggerExit, SAFETY_MAX_MS);
-
-    return () => {
-      window.clearTimeout(autoplayWatchdog);
-      window.clearTimeout(safetyCeiling);
-    };
-  }, [triggerExit]);
-
-  // Bila masuk mode fallback (autoplay gagal / environment tanpa video decoder), selesaikan elegan
-  useEffect(() => {
-    if (!useFallback) return;
-    const blueTimer = window.setTimeout(() => setIsBluePhase(true), 700);
-    const exitTimer = window.setTimeout(triggerExit, 2000);
-    return () => {
-      window.clearTimeout(blueTimer);
-      window.clearTimeout(exitTimer);
-    };
-  }, [triggerExit, useFallback]);
-
-  const handlePlaying = () => {
-    playbackStartedRef.current = true;
-  };
-
-  const handleTimeUpdate = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (v.currentTime > 0.05) {
-      playbackStartedRef.current = true;
-    }
-    if (v.currentTime >= BLUE_PHASE_TIME_S && !isBluePhase) {
-      setIsBluePhase(true);
-    }
-  };
+    if (!ready) return;
+    const timerId = window.setTimeout(finishIntro, TOTAL_DURATION_MS);
+    return () => window.clearTimeout(timerId);
+  }, [finishIntro, ready]);
 
   return (
     <div
       className={[
         'pantera-intro-overlay fixed inset-0 z-[90]',
-        isBluePhase ? 'pantera-intro-overlay--blue' : '',
-        isExiting ? 'pantera-intro-overlay--exiting' : '',
+        ready ? 'pantera-intro-overlay--active' : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -137,87 +189,14 @@ export function PanteraIntroSplash({ onComplete, forcePlay = false }: PanteraInt
       aria-modal="true"
       aria-label="PANTERA Intro"
     >
-      <div className="pantera-intro-blue-bg" aria-hidden="true" />
-
-      <div className="pantera-intro-stage">
-        {!useFallback ? (
-          <video
-            ref={videoRef}
-            src={INTRO_VIDEO_SRC}
-            poster="/intro/PANTERA_blue.png"
-            autoPlay
-            muted
-            playsInline
-            preload="auto"
-            onPlaying={handlePlaying}
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={triggerExit}
-            onError={() => setUseFallback(true)}
-            className="pantera-intro-video"
-          />
-        ) : (
-          <div className="pantera-intro-fallback">
-            <div className="flex items-center justify-center gap-1.5">
-              <img
-                src={isBluePhase ? '/intro/PANTERA_white.png' : '/intro/PANTERA_blue.png'}
-                alt="PANTERA"
-                className="h-14 w-auto object-contain sm:h-16"
-              />
-              <span className="-translate-y-0.5 text-4xl font-black uppercase tracking-[0.035em] sm:text-5xl">
-                ANTERA
-              </span>
-            </div>
-            <p
-              className={`mt-2.5 text-xs font-semibold tracking-[0.04em] sm:text-sm ${
-                isBluePhase ? 'text-white/90' : 'text-slate-600'
-              }`}
-            >
-              Pemantauan Arsip Termin Risiko
-            </p>
-            <div
-              className={`my-4 h-0.5 w-32 rounded-full ${
-                isBluePhase
-                  ? 'bg-gradient-to-r from-transparent via-white/80 to-transparent'
-                  : 'bg-gradient-to-r from-transparent via-[#1877F2]/50 to-transparent'
-              }`}
-            />
-            <span
-              className={`text-[10px] font-semibold uppercase tracking-[0.35em] ${
-                isBluePhase ? 'text-white/75' : 'text-slate-500'
-              }`}
-            >
-              POWERED BY
-            </span>
-            <img
-              src={isBluePhase ? '/intro/DJASIPA_white.png' : '/intro/DJASIPA_blue.png'}
-              alt="DMP"
-              className="mt-2 h-7 w-auto object-contain sm:h-8"
-            />
-            <p
-              className={`mt-1.5 text-xs font-semibold sm:text-sm ${
-                isBluePhase ? 'text-white/95' : 'text-slate-800'
-              }`}
-            >
-              PT Djasipa Mitra Perkasa
-            </p>
-          </div>
-        )}
-
-        {/* Teks brand tersembunyi untuk pembaca layar saat video aktif */}
-        {!useFallback && (
-          <div className="sr-only">
-            <span>PANTERA</span>
-            <span>ANTERA</span>
-            <span>Pemantauan Arsip Termin Risiko</span>
-            <span>POWERED BY</span>
-            <span>PT Djasipa Mitra Perkasa</span>
-          </div>
-        )}
+      <div className="pantera-intro-exit">
+        <IntroSceneLayer variant="light" />
+        <IntroSceneLayer variant="blue" />
 
         <button
           type="button"
-          onClick={finishImmediate}
-          className={`pantera-skip-btn ${showSkip ? 'pantera-skip-btn--visible' : ''}`}
+          onClick={finishIntro}
+          className="pantera-skip-btn"
           aria-label="Lewati animasi intro"
         >
           Lewati
