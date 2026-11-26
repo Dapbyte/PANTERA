@@ -350,12 +350,15 @@ describe('User Testing Fixes Regression Suite', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('PanteraIntroSplash renders brand text and marks sessionStorage seen on skip', () => {
+  it('PanteraIntroSplash renders intro video, brand texts, and marks sessionStorage seen on skip', () => {
     sessionStorage.removeItem(INTRO_SEEN_KEY);
     const onComplete = vi.fn();
 
-    render(<PanteraIntroSplash onComplete={onComplete} forcePlay />);
+    const { container } = render(<PanteraIntroSplash onComplete={onComplete} forcePlay />);
 
+    const videoEl = container.querySelector('video');
+    expect(videoEl).not.toBeNull();
+    expect(videoEl).toHaveAttribute('src', '/intro/PANTERA_DMP_intro_v5.mp4');
     expect(screen.getAllByText('ANTERA').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Pemantauan Arsip Termin Risiko').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('POWERED BY').length).toBeGreaterThanOrEqual(1);

@@ -1,679 +1,127 @@
 .pantera-intro-overlay {
-  --p-settled-h: clamp(54px, 14vw, 88px);
-  --p-settled-w: calc(var(--p-settled-h) * 0.8457);
-  --antera-size: clamp(32px, 8.6vw, 54px);
-  --subtitle-size: clamp(11.5px, 2.7vw, 15.5px);
-  --upper-rest-y: clamp(46px, 9vh, 68px);
-
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   user-select: none;
   -webkit-font-smoothing: antialiased;
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f1f6ff 100%);
+  transition: opacity 0.4s cubic-bezier(0.65, 0, 0.35, 1), transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-.pantera-intro-exit {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
+.pantera-intro-overlay--exiting {
+  opacity: 0;
+  transform: scale(0.985);
+  pointer-events: none;
 }
 
-.pantera-intro-overlay--active .pantera-intro-exit {
-  animation: pantera-exit-out 0.48s cubic-bezier(0.65, 0, 0.35, 1) 4.52s both;
-}
-
-.pantera-intro-layer {
+.pantera-intro-blue-bg {
   position: absolute;
   inset: 0;
+  background: radial-gradient(circle at 50% 50%, #2182ff 0%, #1877f2 52%, #0f5cd2 100%);
+  clip-path: circle(0% at 50% 50%);
+  transition: clip-path 0.65s cubic-bezier(0.65, 0, 0.35, 1);
+  pointer-events: none;
+}
+
+.pantera-intro-overlay--blue .pantera-intro-blue-bg {
+  clip-path: circle(150% at 50% 50%);
+}
+
+.pantera-intro-stage {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: env(safe-area-inset-top, 16px) 16px env(safe-area-inset-bottom, 16px);
+  overflow: hidden;
 }
 
-.pantera-intro-layer--light {
-  background: radial-gradient(circle at 50% 48%, #ffffff 0%, #eff5ff 100%);
+.pantera-intro-video {
+  position: relative;
+  z-index: 1;
+  height: 70dvh;
+  width: auto;
+  max-width: none;
+  object-fit: contain;
+  pointer-events: none;
 }
 
-.pantera-intro-layer--blue {
-  background: radial-gradient(circle at 50% 48%, #2182ff 0%, #1877f2 52%, #0f5cd2 100%);
-  clip-path: circle(0% at 50% 50%);
+@media (min-width: 640px) {
+  .pantera-intro-video {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+  }
 }
 
-.pantera-intro-overlay--active .pantera-intro-layer--blue {
-  animation: pantera-radial-wipe 0.65s cubic-bezier(0.65, 0, 0.35, 1) 3.35s both;
-}
-
-.pantera-intro-composition {
-  width: 100%;
-  max-width: min(88vw, 520px);
+.pantera-intro-fallback {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-}
-
-/* Upper block starts lowered to vertically center PANTERA, then lifts cleanly at 1.72s */
-.pantera-upper-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transform: translateY(var(--upper-rest-y));
-}
-
-.pantera-intro-overlay--active .pantera-upper-block {
-  animation: pantera-upper-lift 0.62s cubic-bezier(0.65, 0, 0.35, 1) 1.72s both;
-}
-
-/* 2-col grid: column 2 expands 0fr -> 1fr so P stays centered at t=0 then glides left */
-.pantera-lockup-row {
-  display: grid;
-  grid-template-columns: auto 0fr;
-  align-items: center;
-  justify-content: center;
-}
-
-.pantera-intro-overlay--active .pantera-lockup-row {
-  animation: pantera-lockup-expand 0.95s cubic-bezier(0.65, 0, 0.35, 1) 0.6s both;
-}
-
-.pantera-p-scale-wrap {
-  position: relative;
-  width: var(--p-settled-w);
-  height: var(--p-settled-h);
-  opacity: 0;
-  transform-origin: center center;
-}
-
-.pantera-intro-overlay--active .pantera-p-scale-wrap {
-  animation: pantera-p-entrance-and-settle 1.55s cubic-bezier(0.65, 0, 0.35, 1) 0s both;
-}
-
-.pantera-p-roar-wrap {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-origin: center center;
-}
-
-.pantera-intro-overlay--active .pantera-p-roar-wrap {
-  animation: pantera-roar-rumble 0.64s cubic-bezier(0.65, 0, 0.35, 1) 0.5s both;
-}
-
-.pantera-p-aura {
-  position: absolute;
-  inset: -26%;
-  border-radius: 9999px;
-  pointer-events: none;
-  opacity: 0;
-  background: radial-gradient(
-    circle at 54% 46%,
-    rgba(24, 119, 242, 0.28) 0%,
-    rgba(24, 119, 242, 0.1) 48%,
-    rgba(24, 119, 242, 0) 74%
-  );
-  filter: blur(8px);
-}
-
-.pantera-intro-layer--blue .pantera-p-aura {
-  background: radial-gradient(
-    circle at 54% 46%,
-    rgba(255, 255, 255, 0.28) 0%,
-    rgba(255, 255, 255, 0) 72%
-  );
-}
-
-.pantera-intro-overlay--active .pantera-p-aura {
-  animation: pantera-aura-pulse 0.64s ease-in-out 0.5s both;
-}
-
-.pantera-p-img {
-  position: relative;
-  z-index: 1;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-/* Eye glint at x=66.5%, y=20.5% */
-.pantera-eye-glint {
-  position: absolute;
-  left: 66.5%;
-  top: 20.5%;
-  width: 22%;
-  height: 22%;
-  z-index: 2;
-  pointer-events: none;
-  transform: translate(-50%, -50%) scale(0);
-  opacity: 0;
-}
-
-.pantera-intro-overlay--active .pantera-eye-glint {
-  animation: pantera-eye-glint 0.5s ease-in-out 0.22s both;
-}
-
-/* Sonic crescent arcs origin at x=72%, y=41% */
-.pantera-roar-arcs {
-  position: absolute;
-  left: 72%;
-  top: 41%;
-  width: 96%;
-  height: 96%;
-  z-index: 2;
-  pointer-events: none;
-  transform: translate(-18%, -50%);
-  overflow: visible;
-}
-
-.pantera-roar-arc {
-  fill: none;
-  stroke-linecap: round;
-  opacity: 0;
-  transform-box: view-box;
-  transform-origin: 18px 46px;
-}
-
-.pantera-intro-layer--light .pantera-roar-arc {
-  stroke: #1877f2;
-}
-
-.pantera-intro-layer--blue .pantera-roar-arc {
-  stroke: #ffffff;
-}
-
-.pantera-intro-overlay--active .pantera-roar-arc--1 {
-  animation: pantera-sonic-arc 0.54s cubic-bezier(0.25, 1, 0.5, 1) 0.5s both;
-}
-
-.pantera-intro-overlay--active .pantera-roar-arc--2 {
-  animation: pantera-sonic-arc 0.54s cubic-bezier(0.25, 1, 0.5, 1) 0.58s both;
-}
-
-.pantera-intro-overlay--active .pantera-roar-arc--3 {
-  animation: pantera-sonic-arc 0.54s cubic-bezier(0.25, 1, 0.5, 1) 0.66s both;
-}
-
-.pantera-antera-mask {
-  overflow: hidden;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-}
-
-.pantera-antera-text {
-  display: inline-block;
-  white-space: nowrap;
-  margin-left: clamp(2px, 0.55vw, 4px);
-  font-size: var(--antera-size);
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
-  transform: translateY(calc(var(--p-settled-h) * -0.05));
-  opacity: 0;
-}
-
-.pantera-intro-layer--light .pantera-antera-text {
+  padding: 1.5rem;
+  max-width: min(88vw, 480px);
   color: #1877f2;
+  animation: pantera-fallback-fade 0.45s ease-out both;
 }
 
-.pantera-intro-layer--blue .pantera-antera-text {
+.pantera-intro-overlay--blue .pantera-intro-fallback {
   color: #ffffff;
 }
 
-.pantera-intro-overlay--active .pantera-antera-text {
-  animation: pantera-antera-fade 0.55s cubic-bezier(0.25, 1, 0.5, 1) 0.68s both;
-}
-
-/* Subtitle mask reveal */
-.pantera-subtitle-mask {
-  overflow: hidden;
-  margin-top: clamp(8px, 1.8vh, 14px);
-}
-
-.pantera-subtitle-text {
-  display: block;
-  font-size: var(--subtitle-size);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1.35;
-  transform: translateY(115%);
-  opacity: 0;
-}
-
-.pantera-intro-layer--light .pantera-subtitle-text {
-  color: #475569;
-}
-
-.pantera-intro-layer--blue .pantera-subtitle-text {
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.pantera-intro-overlay--active .pantera-subtitle-text {
-  animation: pantera-slide-up-reveal 0.6s cubic-bezier(0.25, 1, 0.5, 1) 1.28s both;
-}
-
-/* Lower block: divider + POWERED BY + DMP + PT Djasipa Mitra Perkasa */
-.pantera-lower-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: clamp(14px, 2.6vh, 22px);
-}
-
-.pantera-divider {
-  height: 2px;
-  width: 176px;
-  border-radius: 9999px;
-  transform: scaleX(0);
-  opacity: 0;
-}
-
-@media (max-width: 639px) {
-  .pantera-divider {
-    width: 110px;
+@keyframes pantera-fallback-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.pantera-intro-layer--light .pantera-divider {
-  background: linear-gradient(90deg, transparent 0%, rgba(24, 119, 242, 0.55) 50%, transparent 100%);
-}
-
-.pantera-intro-layer--blue .pantera-divider {
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.85) 50%, transparent 100%);
-}
-
-.pantera-intro-overlay--active .pantera-divider {
-  animation: pantera-divider-expand 0.54s cubic-bezier(0.25, 1, 0.5, 1) 2.02s both;
-}
-
-.pantera-powered-mask {
-  overflow: hidden;
-  margin-top: clamp(12px, 2.2vh, 18px);
-}
-
-.pantera-powered-text {
-  display: block;
-  font-size: clamp(9.5px, 2.1vw, 11px);
-  font-weight: 600;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  padding-left: 0.35em;
-  transform: translateY(115%);
-  opacity: 0;
-}
-
-.pantera-intro-layer--light .pantera-powered-text {
-  color: #64748b;
-}
-
-.pantera-intro-layer--blue .pantera-powered-text {
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.pantera-intro-overlay--active .pantera-powered-text {
-  animation: pantera-slide-up-reveal 0.48s cubic-bezier(0.25, 1, 0.5, 1) 2.18s both;
-}
-
-.pantera-dmp-logo-wrap {
-  margin-top: clamp(6px, 1.4vh, 10px);
-  height: calc(var(--p-settled-h) * 0.52);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: translateY(12px) scale(0.9);
-  opacity: 0;
-}
-
-.pantera-intro-overlay--active .pantera-dmp-logo-wrap {
-  animation: pantera-dmp-reveal 0.58s cubic-bezier(0.25, 1, 0.5, 1) 2.36s both;
-}
-
-.pantera-dmp-img {
-  height: 100%;
-  width: auto;
-  object-fit: contain;
-  display: block;
-}
-
-.pantera-company-mask {
-  overflow: hidden;
-  margin-top: clamp(4px, 1vh, 8px);
-}
-
-.pantera-company-text {
-  display: block;
-  font-size: clamp(12px, 2.8vw, 15px);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  transform: translateY(115%);
-  opacity: 0;
-}
-
-.pantera-intro-layer--light .pantera-company-text {
-  color: #1e293b;
-}
-
-.pantera-intro-layer--blue .pantera-company-text {
-  color: rgba(255, 255, 255, 0.96);
-}
-
-.pantera-intro-overlay--active .pantera-company-text {
-  animation: pantera-slide-up-reveal 0.52s cubic-bezier(0.25, 1, 0.5, 1) 2.56s both;
-}
-
-/* Skip button */
 .pantera-skip-btn {
   position: absolute;
   right: max(1rem, env(safe-area-inset-right, 0px) + 1rem);
   bottom: max(1.25rem, env(safe-area-inset-bottom, 0px) + 1rem);
   z-index: 5;
-  padding: 0.375rem 0.875rem;
+  padding: 0.4rem 0.95rem;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: #475569;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(100, 116, 139, 0.25);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(100, 116, 139, 0.28);
   backdrop-filter: blur(8px);
   cursor: pointer;
   opacity: 0;
   pointer-events: none;
-  transition: background-color 0.2s ease, transform 0.15s ease;
+  transition: opacity 0.3s ease, color 0.3s ease, background-color 0.25s ease,
+    border-color 0.25s ease, transform 0.15s ease;
+}
+
+.pantera-skip-btn--visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .pantera-skip-btn:hover {
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .pantera-skip-btn:active {
   transform: scale(0.97);
 }
 
-.pantera-intro-overlay--active .pantera-skip-btn {
-  animation:
-    pantera-skip-appear 0.35s ease-in-out 1s both,
-    pantera-skip-invert 0.35s ease-in-out 3.55s forwards;
-}
-
-/* Reduced motion static 1.2s + fade-out */
-.pantera-intro-overlay--reduced .pantera-intro-layer--blue {
-  clip-path: circle(150% at 50% 50%);
-}
-
-.pantera-intro-overlay--reduced .pantera-upper-block {
-  transform: translateY(0);
-}
-
-.pantera-intro-overlay--reduced .pantera-lockup-row {
-  grid-template-columns: auto 1fr;
-}
-
-.pantera-intro-overlay--reduced .pantera-p-scale-wrap,
-.pantera-intro-overlay--reduced .pantera-antera-text,
-.pantera-intro-overlay--reduced .pantera-subtitle-text,
-.pantera-intro-overlay--reduced .pantera-divider,
-.pantera-intro-overlay--reduced .pantera-powered-text,
-.pantera-intro-overlay--reduced .pantera-dmp-logo-wrap,
-.pantera-intro-overlay--reduced .pantera-company-text {
-  opacity: 1;
-  transform: none;
-}
-
-.pantera-intro-overlay--reduced .pantera-antera-text {
-  transform: translateY(calc(var(--p-settled-h) * -0.05));
-}
-
-.pantera-intro-overlay--reduced .pantera-skip-btn {
-  opacity: 1;
-  pointer-events: auto;
+.pantera-intro-overlay--blue .pantera-skip-btn {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.38);
 }
 
-.pantera-intro-overlay--reduced.pantera-intro-overlay--active .pantera-intro-exit {
-  animation: pantera-exit-out 0.35s ease-in-out 1.2s both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pantera-intro-overlay--active .pantera-intro-layer--blue {
-    animation: none;
-    clip-path: circle(150% at 50% 50%);
-  }
-
-  .pantera-intro-overlay--active .pantera-upper-block,
-  .pantera-intro-overlay--active .pantera-lockup-row,
-  .pantera-intro-overlay--active .pantera-p-scale-wrap,
-  .pantera-intro-overlay--active .pantera-p-roar-wrap,
-  .pantera-intro-overlay--active .pantera-p-aura,
-  .pantera-intro-overlay--active .pantera-eye-glint,
-  .pantera-intro-overlay--active .pantera-roar-arc,
-  .pantera-intro-overlay--active .pantera-antera-text,
-  .pantera-intro-overlay--active .pantera-subtitle-text,
-  .pantera-intro-overlay--active .pantera-divider,
-  .pantera-intro-overlay--active .pantera-powered-text,
-  .pantera-intro-overlay--active .pantera-dmp-logo-wrap,
-  .pantera-intro-overlay--active .pantera-company-text {
-    animation: none !important;
-  }
-
-  .pantera-intro-overlay--active .pantera-upper-block {
-    transform: translateY(0);
-  }
-
-  .pantera-intro-overlay--active .pantera-lockup-row {
-    grid-template-columns: auto 1fr;
-  }
-
-  .pantera-intro-overlay--active .pantera-p-scale-wrap,
-  .pantera-intro-overlay--active .pantera-antera-text,
-  .pantera-intro-overlay--active .pantera-subtitle-text,
-  .pantera-intro-overlay--active .pantera-divider,
-  .pantera-intro-overlay--active .pantera-powered-text,
-  .pantera-intro-overlay--active .pantera-dmp-logo-wrap,
-  .pantera-intro-overlay--active .pantera-company-text {
-    opacity: 1;
-    transform: none;
-  }
-
-  .pantera-intro-overlay--active .pantera-antera-text {
-    transform: translateY(calc(var(--p-settled-h) * -0.05));
-  }
-}
-
-/* Keyframes */
-@keyframes pantera-p-entrance-and-settle {
-  0% {
-    opacity: 0;
-    transform: scale(1);
-  }
-  32% {
-    /* 0.50s of 1.55s: 0.80 -> 1.00 of hero 1.25x scale */
-    opacity: 1;
-    transform: scale(1.25);
-  }
-  36% {
-    /* 0.56s: begin lockup slide/settle */
-    opacity: 1;
-    transform: scale(1.25);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes pantera-eye-glint {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0) rotate(-18deg);
-  }
-  42% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.08) rotate(8deg);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.15) rotate(32deg);
-  }
-}
-
-@keyframes pantera-roar-rumble {
-  0% {
-    transform: translate(0, 0) scale(1);
-  }
-  20% {
-    transform: translate(-2px, 1.5px) scale(1.045);
-  }
-  36% {
-    transform: translate(2.5px, -2px) scale(1.08);
-  }
-  52% {
-    transform: translate(-2.5px, 1.5px) scale(1.08);
-  }
-  68% {
-    transform: translate(2px, -1.5px) scale(1.06);
-  }
-  84% {
-    transform: translate(-1.5px, 1px) scale(1.025);
-  }
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-}
-
-@keyframes pantera-aura-pulse {
-  0% {
-    opacity: 0;
-    transform: scale(0.85);
-  }
-  45% {
-    opacity: 1;
-    transform: scale(1.12);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.25);
-  }
-}
-
-@keyframes pantera-sonic-arc {
-  0% {
-    opacity: 0;
-    transform: translateX(0) scale(0.55);
-  }
-  28% {
-    opacity: 0.72;
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(32%) scale(1.45);
-  }
-}
-
-@keyframes pantera-lockup-expand {
-  0% {
-    grid-template-columns: auto 0fr;
-  }
-  100% {
-    grid-template-columns: auto 1fr;
-  }
-}
-
-@keyframes pantera-antera-fade {
-  0% {
-    opacity: 0;
-  }
-  30% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes pantera-slide-up-reveal {
-  0% {
-    opacity: 0;
-    transform: translateY(115%);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pantera-upper-lift {
-  0% {
-    transform: translateY(var(--upper-rest-y));
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
-@keyframes pantera-divider-expand {
-  0% {
-    opacity: 0;
-    transform: scaleX(0);
-  }
-  25% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: scaleX(1);
-  }
-}
-
-@keyframes pantera-dmp-reveal {
-  0% {
-    opacity: 0;
-    transform: translateY(12px) scale(0.9);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes pantera-radial-wipe {
-  0% {
-    clip-path: circle(0% at 50% 50%);
-  }
-  100% {
-    clip-path: circle(150% at 50% 50%);
-  }
-}
-
-@keyframes pantera-exit-out {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.97);
-  }
-}
-
-@keyframes pantera-skip-appear {
-  0% {
-    opacity: 0;
-    pointer-events: none;
-  }
-  100% {
-    opacity: 1;
-    pointer-events: auto;
-  }
-}
-
-@keyframes pantera-skip-invert {
-  to {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.35);
-  }
+.pantera-intro-overlay--blue .pantera-skip-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
 }

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { PanteraLogo } from '../components/common/PanteraLogo';
 import { FieldError } from '../components/ui';
 import { authService, type User } from '../services';
 import { extractApiError } from '../lib/api';
@@ -63,142 +62,197 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-900 p-4 font-sans">
+    <div className="relative min-h-[100dvh] w-full overflow-x-hidden bg-gradient-to-br from-[#0F5CD2] via-[#1877F2] to-[#3B8EF7] font-sans">
+      {/* Soft ambient highlights on Brand Blue canvas */}
       <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundColor: '#0b1524',
-          backgroundImage:
-            'radial-gradient(circle at 15% 10%, rgba(24, 119, 242, 0.55), transparent 45%), radial-gradient(circle at 85% 90%, rgba(24, 119, 242, 0.32), transparent 50%), linear-gradient(135deg, #0f2747 0%, #0b1524 100%)',
-        }}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_18%,rgba(255,255,255,0.18),transparent_42%),radial-gradient(circle_at_85%_82%,rgba(12,68,175,0.45),transparent_50%)]"
       />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_55%)]" />
 
-      <div className="relative z-10 w-full max-w-[430px] rounded-3xl border border-white/50 bg-white p-8 shadow-2xl sm:p-10">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <PanteraLogo
-            variant="dark"
-            showText
-            className="mb-2 h-14 w-14"
-            textClassName="text-2xl tracking-[0.18em]"
-          />
-          <p className="mt-1 text-xs font-medium text-slate-500">
-            Pemantauan Arsip, Termin &amp; Risiko
-          </p>
-          <p className="text-[11px] text-slate-400">PT. Djasipa Mitra Perkasa</p>
-        </div>
-
-        <form onSubmit={handleSubmit} noValidate className="space-y-5">
-          <div className="space-y-1">
-            <label htmlFor="email" className="block text-sm font-semibold text-slate-800">
-              Email Perusahaan
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setFieldErrors((prev) => ({ ...prev, email: undefined }));
-                setError(null);
-              }}
-              className={`w-full border-b bg-transparent py-2 text-sm text-slate-800 transition placeholder:text-slate-400 focus:outline-none ${
-                fieldErrors.email
-                  ? 'border-rose-400 focus:border-rose-500'
-                  : 'border-slate-300 focus:border-[#1877F2]'
-              }`}
-              placeholder="nama@pantera.id"
-              autoComplete="email"
+      <div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col justify-center gap-6 px-4 py-7 sm:px-8 lg:grid lg:grid-cols-12 lg:items-center lg:gap-12 lg:py-10">
+        {/* Left Hero Brand Block */}
+        <section className="flex flex-col items-center text-center text-white lg:col-span-6 lg:items-start lg:text-left">
+          <div className="inline-flex items-center gap-1">
+            <img
+              src="/intro/PANTERA_white.png"
+              alt="Logo PANTERA"
+              className="h-10 w-auto object-contain sm:h-12"
             />
-            <FieldError message={fieldErrors.email} />
+            <span className="-translate-y-0.5 text-2xl font-black uppercase tracking-[0.04em] text-white sm:text-3xl">
+              ANTERA
+            </span>
           </div>
 
-          <div className="space-y-1">
-            <label htmlFor="password" className="block text-sm font-semibold text-slate-800">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setFieldErrors((prev) => ({ ...prev, password: undefined }));
-                  setError(null);
-                }}
-                className={`w-full border-b bg-transparent py-2 pr-10 text-sm text-slate-800 transition placeholder:text-slate-400 focus:outline-none ${
-                  fieldErrors.password
-                    ? 'border-rose-400 focus:border-rose-500'
-                    : 'border-slate-300 focus:border-[#1877F2]'
-                }`}
-                placeholder="Masukkan password"
-                autoComplete="current-password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-1 top-1.5 rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-                aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+          <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:mt-8 lg:text-5xl">
+            Halo, Selamat Datang!
+          </h1>
+
+          <p className="mt-2 text-sm font-semibold text-white/95 sm:text-base">
+            Pemantauan Arsip, Termin &amp; Risiko Proyek
+          </p>
+
+          <p className="mt-3 hidden max-w-md text-sm leading-relaxed text-white/80 sm:block">
+            Platform operasional terpadu PT. Djasipa Mitra Perkasa untuk pengajuan material,
+            progres fisik lapangan, early warning Kurva S, penagihan SP2D, dan arsip hibrida.
+          </p>
+
+          <div className="mt-8 hidden items-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 backdrop-blur-sm lg:inline-flex">
+            <img
+              src="/intro/DJASIPA_white.png"
+              alt="DMP"
+              className="h-6 w-auto object-contain opacity-95"
+            />
+            <div className="text-left leading-tight">
+              <div className="text-[9px] font-semibold uppercase tracking-[0.26em] text-white/75">
+                Powered By
+              </div>
+              <div className="text-xs font-semibold text-white">PT. Djasipa Mitra Perkasa</div>
             </div>
-            <FieldError message={fieldErrors.password} />
           </div>
+        </section>
 
-          {error && (
-            <div
-              role="alert"
-              className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-medium text-rose-700"
-            >
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{error}</span>
+        {/* Right Floating White Login Card */}
+        <section className="flex justify-center lg:col-span-6 lg:justify-end">
+          <div className="w-full max-w-[440px] rounded-[2rem] bg-white p-6 shadow-2xl shadow-blue-950/25 sm:p-10">
+            <div className="text-center">
+              <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                Masuk ke Akun Anda
+              </h2>
+              <p className="mt-1.5 text-xs text-slate-500">
+                Gunakan email perusahaan PT. Djasipa Mitra Perkasa untuk melanjutkan.
+              </p>
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1877F2] px-6 py-3.5 font-semibold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Memverifikasi…</span>
-              </>
-            ) : (
-              <>
-                <span>Masuk ke Dashboard</span>
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </button>
-        </form>
+            <form onSubmit={handleSubmit} noValidate className="mt-7 space-y-4">
+              <div>
+                <label htmlFor="email" className="sr-only">
+                  Email Perusahaan
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                    setError(null);
+                  }}
+                  className={`w-full rounded-full border bg-slate-50/70 px-5 py-3 text-sm text-slate-800 transition placeholder:text-slate-400 focus:bg-white focus:outline-none ${
+                    fieldErrors.email
+                      ? 'border-rose-400 focus:border-rose-500'
+                      : 'border-slate-200 focus:border-[#1877F2]'
+                  }`}
+                  placeholder="Email Perusahaan (nama@pantera.id)"
+                  autoComplete="email"
+                />
+                <div className="mt-1 px-2">
+                  <FieldError message={fieldErrors.email} />
+                </div>
+              </div>
 
-        <div className="mt-7 border-t border-dashed border-slate-200 pt-4">
-          <div className="mb-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-            Akun standar per peran (klik untuk isi)
-          </div>
-          <div className="space-y-1">
-            {demoHints.map((hint) => (
+              <div>
+                <label htmlFor="password" className="sr-only">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                      setError(null);
+                    }}
+                    className={`w-full rounded-full border bg-slate-50/70 px-5 py-3 pr-12 text-sm text-slate-800 transition placeholder:text-slate-400 focus:bg-white focus:outline-none ${
+                      fieldErrors.password
+                        ? 'border-rose-400 focus:border-rose-500'
+                        : 'border-slate-200 focus:border-[#1877F2]'
+                    }`}
+                    placeholder="Password"
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                    aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <div className="mt-1 px-2">
+                  <FieldError message={fieldErrors.password} />
+                </div>
+              </div>
+
+              {error && (
+                <div
+                  role="alert"
+                  className="flex items-start gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-700"
+                >
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
               <button
-                key={hint.email}
-                type="button"
-                onClick={() => fillCredentials(hint)}
-                className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-left text-[11px] text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                type="submit"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-[#1877F2] px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:bg-[#0F5CD2] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <span className="font-semibold text-slate-600">{hint.role}</span>
-                <span className="font-mono text-slate-400">{hint.email}</span>
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Memverifikasi…</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Masuk ke Dashboard</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
               </button>
-            ))}
-          </div>
-        </div>
+            </form>
 
-        <div className="mt-5 flex items-center justify-center gap-1.5 border-t border-dashed border-slate-200 pt-4 text-[11px] text-slate-400">
-          <ShieldCheck className="h-3.5 w-3.5" />
-          <span>Akses internal terbatas — PT. Djasipa Mitra Perkasa</span>
-        </div>
+            <div className="my-6 flex items-center gap-3">
+              <div className="h-px flex-1 bg-slate-200" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                Atau isi akun demo
+              </span>
+              <div className="h-px flex-1 bg-slate-200" />
+            </div>
+
+            <div className="space-y-2">
+              {demoHints.map((hint) => (
+                <button
+                  key={hint.email}
+                  type="button"
+                  onClick={() => fillCredentials(hint)}
+                  className="flex w-full items-center justify-between gap-2 rounded-full border border-slate-200/80 bg-slate-50/80 px-4 py-2.5 text-left text-[11px] text-slate-600 transition hover:border-[#1877F2]/40 hover:bg-blue-50/60 hover:text-slate-900"
+                >
+                  <span className="truncate font-semibold text-slate-700">{hint.role}</span>
+                  <span className="shrink-0 font-mono text-slate-400">{hint.email}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 flex items-center justify-center gap-1.5 border-t border-slate-100 pt-4 text-[11px] text-slate-400">
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#1877F2]" />
+              <span>Akses internal terbatas — PT. Djasipa Mitra Perkasa</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Mobile Powered By Footer */}
+        <footer className="flex items-center justify-center gap-2 pb-1 text-white/85 lg:hidden">
+          <img
+            src="/intro/DJASIPA_white.png"
+            alt="DMP"
+            className="h-5 w-auto object-contain opacity-95"
+          />
+          <span className="text-[11px] font-medium">PT. Djasipa Mitra Perkasa</span>
+        </footer>
       </div>
     </div>
   );
