@@ -6,9 +6,8 @@ export const INTRO_SEEN_KEY = 'pantera_intro_seen';
 const INTRO_VIDEO_SRC = '/intro/PANTERA_DMP_intro_v5.mp4';
 const BLUE_PHASE_TIME_S = 3.35;
 const EXIT_FADE_MS = 400;
-const AUTOPLAY_CHECK_MS = 1200;
+const AUTOPLAY_CHECK_MS = 2500;
 const SAFETY_MAX_MS = 6500;
-const REDUCED_MOTION_HOLD_MS = 1200;
 
 export interface PanteraIntroSplashProps {
   onComplete: () => void;
@@ -26,14 +25,9 @@ export function PanteraIntroSplash({ onComplete, forcePlay = false }: PanteraInt
   const playbackStartedRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
 
-  const [reducedMotion] = useState(() =>
-    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      : false
-  );
-  const [isBluePhase, setIsBluePhase] = useState(reducedMotion);
+  const [isBluePhase, setIsBluePhase] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
-  const [useFallback, setUseFallback] = useState(reducedMotion);
+  const [useFallback, setUseFallback] = useState(false);
   const [showSkip, setShowSkip] = useState(false);
 
   useEffect(() => {
@@ -70,19 +64,14 @@ export function PanteraIntroSplash({ onComplete, forcePlay = false }: PanteraInt
     }
   }, [finishImmediate, forcePlay]);
 
-  // Pastikan tombol Lewati muncul setelah ~0.8 detik
+  // Pastikan tombol Lewati muncul setelah ~0.6 detik
   useEffect(() => {
-    const skipTimer = window.setTimeout(() => setShowSkip(true), 800);
+    const skipTimer = window.setTimeout(() => setShowSkip(true), 600);
     return () => window.clearTimeout(skipTimer);
   }, []);
 
-  // Pastikan autoplay muted berjalan, atau fallback jika diblokir / prefers-reduced-motion
+  // Pastikan autoplay muted berjalan di semua browser, atau fallback jika genuinely diblokir
   useEffect(() => {
-    if (reducedMotion) {
-      const t = window.setTimeout(triggerExit, REDUCED_MOTION_HOLD_MS);
-      return () => window.clearTimeout(t);
-    }
-
     const video = videoRef.current;
     if (video) {
       video.muted = true;
@@ -107,18 +96,18 @@ export function PanteraIntroSplash({ onComplete, forcePlay = false }: PanteraInt
       window.clearTimeout(autoplayWatchdog);
       window.clearTimeout(safetyCeiling);
     };
-  }, [reducedMotion, triggerExit]);
+  }, [triggerExit]);
 
   // Bila masuk mode fallback (autoplay gagal / environment tanpa video decoder), selesaikan elegan
   useEffect(() => {
-    if (!useFallback || reducedMotion) return;
+    if (!useFallback) return;
     const blueTimer = window.setTimeout(() => setIsBluePhase(true), 700);
     const exitTimer = window.setTimeout(triggerExit, 2000);
     return () => {
       window.clearTimeout(blueTimer);
       window.clearTimeout(exitTimer);
     };
-  }, [reducedMotion, triggerExit, useFallback]);
+  }, [triggerExit, useFallback]);
 
   const handlePlaying = () => {
     playbackStartedRef.current = true;
