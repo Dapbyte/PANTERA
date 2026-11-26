@@ -32,8 +32,19 @@ class EarlyWarningController extends Controller
             return $this->errorResponse('Akses ditolak: Anda tidak memiliki akses ke proyek ini.', 403);
         }
 
+        $analysis = $this->earlyWarningService->analyze($proyek);
+
+        if ($user->peran === 'AdminLapangan') {
+            if (isset($analysis['termin_berjalan']) && is_array($analysis['termin_berjalan'])) {
+                $analysis['termin_berjalan']['nilai_tagihan'] = 0.0;
+            }
+            if (isset($analysis['prediksi']) && is_array($analysis['prediksi'])) {
+                $analysis['prediksi']['estimasi_kerugian'] = 0.0;
+            }
+        }
+
         return $this->successResponse(
-            $this->earlyWarningService->analyze($proyek),
+            $analysis,
             'Early warning termin berhasil dimuat.'
         );
     }

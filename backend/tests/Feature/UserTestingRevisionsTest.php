@@ -137,6 +137,9 @@ test('GLB-14: Admin Lapangan hanya melihat proyek yang diberi akses oleh Direktu
         ->and((float) $listRes->json('data.0.posisi_termin_berjalan.nilai_tagihan'))->toBe(0.0);
 
     $this->getJson("/api/projects/{$proyekTerbuka->id_proyek}")->assertStatus(200);
+    $ewRes = $this->getJson("/api/projects/{$proyekTerbuka->id_proyek}/early-warning")->assertStatus(200);
+    expect((float) $ewRes->json('data.termin_berjalan.nilai_tagihan'))->toBe(0.0)
+        ->and((float) $ewRes->json('data.prediksi.estimasi_kerugian'))->toBe(0.0);
     $this->getJson("/api/projects/{$proyekTerkunci->id_proyek}")->assertStatus(403);
     $this->postJson('/api/material-requests', [
         'id_proyek' => $proyekTerkunci->id_proyek,
