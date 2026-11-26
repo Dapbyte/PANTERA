@@ -107,6 +107,13 @@ test('GLB-14: Admin Lapangan hanya melihat proyek yang diberi akses oleh Direktu
         'tanggal_ditetapkan' => '2026-01-01',
         'versi_rab' => '1',
     ]);
+    $proyekTerbuka->termin()->create([
+        'nomor_termin' => 1,
+        'target_persentase' => 100,
+        'nilai_tagihan' => 100000000,
+        'tenggat_waktu' => '2026-06-30',
+        'status_penagihan' => 'Belum siap',
+    ]);
     $proyekTerbuka->adminLapanganAkses()->attach($lapangan->id_pengguna);
 
     $proyekTerkunci = Proyek::create([
@@ -124,7 +131,10 @@ test('GLB-14: Admin Lapangan hanya melihat proyek yang diberi akses oleh Direktu
 
     $listRes = $this->getJson('/api/projects')->assertStatus(200);
     expect($listRes->json('data'))->toHaveCount(1)
-        ->and($listRes->json('data.0.kode_proyek'))->toBe('P201');
+        ->and($listRes->json('data.0.kode_proyek'))->toBe('P201')
+        ->and((float) $listRes->json('data.0.nilai_kontrak'))->toBe(0.0)
+        ->and((float) $listRes->json('data.0.ringkasan_rab.total_pagu'))->toBe(0.0)
+        ->and((float) $listRes->json('data.0.posisi_termin_berjalan.nilai_tagihan'))->toBe(0.0);
 
     $this->getJson("/api/projects/{$proyekTerbuka->id_proyek}")->assertStatus(200);
     $this->getJson("/api/projects/{$proyekTerkunci->id_proyek}")->assertStatus(403);

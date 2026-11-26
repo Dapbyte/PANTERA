@@ -336,7 +336,7 @@ class ProjectService
                 'created_at' => $proyek->created_at?->toDateTimeString(),
             ];
 
-            // Admin Lapangan tidak membutuhkan & tidak melihat nilai pagu/kontrak finansial
+            // Admin Lapangan tidak membutuhkan & tidak melihat nilai pagu/kontrak/tagihan finansial
             if ($allowedProjectIds !== null) {
                 $payload['nilai_kontrak'] = 0.0;
                 $payload['ringkasan_rab'] = [
@@ -344,6 +344,9 @@ class ProjectService
                     'sisa_pagu' => 0.0,
                     'versi_rab' => $versiRab,
                 ];
+                if ($payload['posisi_termin_berjalan'] !== null) {
+                    $payload['posisi_termin_berjalan']['nilai_tagihan'] = 0.0;
+                }
             }
 
             return $payload;
