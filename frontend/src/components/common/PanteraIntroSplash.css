@@ -2,7 +2,7 @@
   --p-settled-h: clamp(54px, 14vw, 88px);
   --p-settled-w: calc(var(--p-settled-h) * 0.8457);
   --antera-size: clamp(32px, 8.6vw, 54px);
-  --p-center-offset: clamp(68px, 18vw, 114px);
+  --p-center-offset: clamp(72px, 18.5vw, 118px);
   --subtitle-size: clamp(11.5px, 2.7vw, 15.5px);
   --upper-rest-y: clamp(46px, 9vh, 68px);
 
@@ -68,21 +68,28 @@
   animation: pantera-upper-lift 0.62s cubic-bezier(0.65, 0, 0.35, 1) 1.72s both;
 }
 
-/* Lockup [P] ANTERA selalu terpusat pada posisi akhir, sementara P mulai dari tengah & geser ke kiri */
+/* Lockup [P] ANTERA bergerak sebagai satu ruang koordinat: mulai terpusat di P, lalu geser ke kiri saat ANTERA keluar di sebelah kanan */
 .pantera-lockup-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(2px, 0.5vw, 4px);
+  gap: clamp(4px, 0.9vw, 8px);
+  transform: translateX(var(--p-center-offset));
+  will-change: transform;
+}
+
+.pantera-intro-overlay--active .pantera-lockup-row {
+  animation: pantera-lockup-glide 0.99s cubic-bezier(0.65, 0, 0.35, 1) 0.56s both;
 }
 
 .pantera-p-scale-wrap {
   position: relative;
+  z-index: 2;
   width: var(--p-settled-w);
   height: var(--p-settled-h);
   opacity: 0;
-  transform: translateX(var(--p-center-offset)) scale(0.95);
-  transform-origin: center center;
+  transform: scale(0.95);
+  transform-origin: right center;
   will-change: transform, opacity;
 }
 
@@ -196,10 +203,11 @@
   animation: pantera-sonic-arc 0.54s cubic-bezier(0.25, 1, 0.5, 1) 0.66s both;
 }
 
-/* ANTERA mask reveal mulus berbasis GPU clip-path + translateX */
+/* ANTERA mask reveal mulus berbasis GPU clip-path di sebelah kanan P */
 .pantera-antera-text {
   display: inline-block;
   white-space: nowrap;
+  padding-left: clamp(2px, 0.4vw, 4px);
   font-size: var(--antera-size);
   font-weight: 900;
   line-height: 1;
@@ -207,8 +215,8 @@
   text-transform: uppercase;
   opacity: 0;
   clip-path: inset(0 100% 0 0);
-  transform: translateY(calc(var(--p-settled-h) * -0.05)) translateX(-14px);
-  will-change: transform, opacity, clip-path;
+  transform: translateY(calc(var(--p-settled-h) * -0.05));
+  will-change: opacity, clip-path;
 }
 
 .pantera-intro-layer--light .pantera-antera-text {
@@ -220,7 +228,7 @@
 }
 
 .pantera-intro-overlay--active .pantera-antera-text {
-  animation: pantera-antera-reveal 0.95s cubic-bezier(0.25, 1, 0.5, 1) 0.6s both;
+  animation: pantera-antera-reveal 0.9s cubic-bezier(0.25, 1, 0.5, 1) 0.65s both;
 }
 
 /* Subjudul reveal */
@@ -396,22 +404,31 @@
 }
 
 /* Keyframes GPU */
+@keyframes pantera-lockup-glide {
+  0% {
+    transform: translateX(var(--p-center-offset));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
 @keyframes pantera-p-entrance-and-settle {
   0% {
     opacity: 0;
-    transform: translateX(var(--p-center-offset)) scale(0.95);
+    transform: scale(0.95);
   }
   32% {
     opacity: 1;
-    transform: translateX(var(--p-center-offset)) scale(1.22);
+    transform: scale(1.18);
   }
   36% {
     opacity: 1;
-    transform: translateX(var(--p-center-offset)) scale(1.22);
+    transform: scale(1.18);
   }
   100% {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: scale(1);
   }
 }
 
@@ -487,7 +504,7 @@
   0% {
     opacity: 0;
     clip-path: inset(0 100% 0 0);
-    transform: translateY(calc(var(--p-settled-h) * -0.05)) translateX(-14px);
+    transform: translateY(calc(var(--p-settled-h) * -0.05));
   }
   18% {
     opacity: 1;
@@ -495,7 +512,7 @@
   100% {
     opacity: 1;
     clip-path: inset(0 0% 0 0);
-    transform: translateY(calc(var(--p-settled-h) * -0.05)) translateX(0);
+    transform: translateY(calc(var(--p-settled-h) * -0.05));
   }
 }
 
