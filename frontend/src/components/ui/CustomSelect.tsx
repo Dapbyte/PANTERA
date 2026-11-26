@@ -71,7 +71,9 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => {
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
           if (!disabled) {
             setSearch('');
             setOpen((prev) => !prev);
@@ -98,6 +100,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       {open && (
         <div
           role="listbox"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
           className="absolute left-0 right-0 z-50 mt-1.5 overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-xl"
         >
           {searchable && (
@@ -129,7 +133,9 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                     type="button"
                     role="option"
                     aria-selected={isSelected}
-                    onClick={() => {
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
                       onChange(opt.value);
                       setOpen(false);
                     }}

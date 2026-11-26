@@ -4,7 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PanteraLogo } from '../src/components/common/PanteraLogo';
 import { MultiPhotoPicker } from '../src/components/common/MultiPhotoPicker';
 import { DownloadPerformanceReportButton } from '../src/components/common/DownloadPerformanceReportButton';
-import { WheelDatePicker } from '../src/components/ui';
+import { DocumentPreviewModal } from '../src/components/common/DocumentPreviewModal';
+import { CustomSelect, WheelDatePicker } from '../src/components/ui';
+import { api } from '../src/lib/api';
 import { UiFeedbackProvider } from '../src/context/UiFeedbackContext';
 import { SekretarisValidasiPage } from '../src/pages/sekretaris/SekretarisValidasiPage';
 import { bankCreditService, materialService, type PerformanceReport, type RequestMaterial } from '../src/services';
@@ -246,5 +248,72 @@ describe('User Testing Fixes Regression Suite', () => {
     });
 
     vi.restoreAllMocks();
+  });
+
+  it('CustomSelect stops propagation on trigger & option clicks so parent modal backdrops do not close', () => {
+    const backdropClick = vi.fn();
+    const onChange = vi.fn();
+
+    render(
+      <div onClick={backdropClick}>
+        <CustomSelect
+          ariaLabel="Satuan Material"
+          value="sak"
+          onChange={onChange}
+          options={[
+            { value: 'sak', label: 'sak' },
+            { value: 'batang', label: 'batang' },
+          ]}
+        />
+      </div>
+    );
+
+    fireEvent.click(screen.getByLabelText('Satuan Material'));
+    fireEvent.click(screen.getByRole('option', { name: 'batang' }));
+
+    expect(onChange).toHaveBeenCalledWith('batang');
+    expect(backdropClick).not.toHaveBeenCalled();
+  });
+
+  it('api 401 interceptor clears stored session and emits pantera:unauthorized for non-auth endpoints', async () => {
+    localStorage.setItem('pantera_token', 'stale-token');
+    const unauthorizedHandler = vi.fn();
+    window.addEventListener('pantera:unauthorized', unauthorizedHandler);
+
+    const rejector = (
+      api.interceptors.response as unknown as {
+        handlers: Array<{ rejected?: (err: unknown) => Promise<never> }>;
+      }
+    ).handlers[0].rejected!;
+
+    await expect(
+      rejector({
+        response: { status: 401 },
+        config: { url: '/projects' },
+      })
+    ).rejects.toBeDefined();
+
+    expect(localStorage.getItem('pantera_token')).toBeNull();
+    expect(unauthorizedHandler).toHaveBeenCalledTimes(1);
+
+    window.removeEventListener('pantera:unauthorized', unauthorizedHandler);
+  });
+
+  it('DocumentPreviewModal zoom controls update percentage and Escape closes modal', async () => {
+    const onClose = vi.fn();
+    const imgFile = new File(['img'], 'bukti.png', { type: 'image/png' });
+
+    render(
+      <DocumentPreviewModal title="Bukti Lapangan" localFile={imgFile} onClose={onClose} />
+    );
+
+    expect(await screen.findByText('100%')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Perbesar pratinjau'));
+    expect(screen.getByText('125%')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Perkecil pratinjau'));
+    expect(screen.getByText('100%')).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

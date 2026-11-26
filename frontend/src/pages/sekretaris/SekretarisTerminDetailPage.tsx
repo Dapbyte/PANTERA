@@ -145,6 +145,7 @@ export const SekretarisTerminDetailPage: React.FC<SekretarisTerminDetailPageProp
     }
 
     setVerifyingDocId(idDokumen);
+    setUserSelectedTerminId(idTermin);
     setError(null);
     try {
       await terminService.verifikasiDokumen(idTermin, idDokumen, {
@@ -196,6 +197,7 @@ export const SekretarisTerminDetailPage: React.FC<SekretarisTerminDetailPageProp
     }
 
     setBillingErrs({});
+    setUserSelectedTerminId(selectedTerminId);
     setSubmitting(true);
     setError(null);
     try {
@@ -222,6 +224,7 @@ export const SekretarisTerminDetailPage: React.FC<SekretarisTerminDetailPageProp
     }
 
     setBillingErrs({});
+    setUserSelectedTerminId(selectedTerminId);
     setSubmitting(true);
     setError(null);
     try {
@@ -248,6 +251,7 @@ export const SekretarisTerminDetailPage: React.FC<SekretarisTerminDetailPageProp
     }
 
     setBillingErrs({});
+    setUserSelectedTerminId(selectedTerminId);
     setSubmitting(true);
     setError(null);
     try {
@@ -398,7 +402,7 @@ export const SekretarisTerminDetailPage: React.FC<SekretarisTerminDetailPageProp
               aria-selected={isActive}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`whitespace-nowrap border-b-2 pb-3 pt-1 text-xs font-semibold transition ${
+              className={`whitespace-nowrap border-b-2 pb-3 pt-1 text-xs font-semibold ${
                 isActive
                   ? 'border-[#1877F2] text-[#1877F2]'
                   : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-800'

@@ -33,13 +33,16 @@ api.interceptors.response.use(
   },
   (error: AxiosError<ApiResponse<unknown>>) => {
     if (error.response?.status === 401) {
-      // Token tidak valid atau kedaluwarsa
+      // Token tidak valid atau kedaluwarsa -> bersihkan sesi dan kabari shell agar redirect ke Login
       console.warn('[PANTERA API] Sesi autentikasi telah berakhir.');
-      // Opsi: Hapus token lokal jika bukan saat request login
-      const isLoginRequest = error.config?.url?.includes('/auth/login');
-      if (!isLoginRequest) {
+      const url = error.config?.url ?? '';
+      const isAuthLifecycleRequest = url.includes('/auth/login') || url.includes('/auth/logout');
+      if (!isAuthLifecycleRequest) {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('pantera:unauthorized'));
+        }
       }
     }
     return Promise.reject(error);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   earlyWarningService,
@@ -85,6 +85,15 @@ export const DirekturProyekPage: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [loadingEdit, setLoadingEdit] = useState(false);
   const [monitoringProject, setMonitoringProject] = useState<ProjectListItem | null>(null);
+
+  useEffect(() => {
+    if (!monitoringProject) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMonitoringProject(null);
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [monitoringProject]);
 
   const { data: monitoringEw } = useQuery<EarlyWarningAnalysis>({
     queryKey: ['early-warning', 'direktur-monitor', monitoringProject?.id_proyek],
@@ -706,7 +715,7 @@ export const DirekturProyekPage: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="sm:col-span-4">
+                        <div className="sm:col-span-3">
                           <label className="mb-0.5 block text-[10px] text-gray-400 sm:hidden">
                             Nilai Tagihan (Rp)
                           </label>
@@ -718,7 +727,7 @@ export const DirekturProyekPage: React.FC = () => {
                           />
                         </div>
 
-                        <div className="sm:col-span-2">
+                        <div className="sm:col-span-3">
                           <label className="mb-0.5 block text-[10px] text-gray-400 sm:hidden">
                             Tenggat
                           </label>

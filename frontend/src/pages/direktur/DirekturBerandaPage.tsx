@@ -18,10 +18,12 @@ import { AlertCircle, ChevronRight } from 'lucide-react';
 
 interface DirekturBerandaPageProps {
   onSelectPengajuan: (idRequest: number) => void;
+  onGoToProyek?: () => void;
 }
 
 export const DirekturBerandaPage: React.FC<DirekturBerandaPageProps> = ({
   onSelectPengajuan,
+  onGoToProyek,
 }) => {
   const [filterTab, setFilterTab] = useState<StatusApprovalMaterial | 'Semua'>(
     'Menunggu Direktur'
@@ -41,7 +43,7 @@ export const DirekturBerandaPage: React.FC<DirekturBerandaPageProps> = ({
     queryFn: () => projectService.getProjects(),
   });
 
-  const { data: portfolio = null } = useQuery<EarlyWarningPortfolio>({
+  const { data: portfolio = null, isLoading: loadingPortfolio } = useQuery<EarlyWarningPortfolio>({
     queryKey: ['early-warning', 'portfolio'],
     queryFn: () => earlyWarningService.getPortfolio(),
   });
@@ -120,24 +122,48 @@ export const DirekturBerandaPage: React.FC<DirekturBerandaPageProps> = ({
                 <div className="text-xs text-white/80">Prioritas kebutuhan mendesak</div>
               </div>
 
-              <div
-                className={`flex h-[125px] flex-col justify-between rounded-2xl p-5 shadow-md ${ewTone.cardBg}`}
+              <button
+                type="button"
+                onClick={onGoToProyek}
+                className={`flex h-[125px] w-full flex-col justify-between rounded-2xl p-5 text-left shadow-md transition ${
+                  onGoToProyek ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-lg' : 'cursor-default'
+                } ${
+                  loadingPortfolio && !portfolio
+                    ? 'border border-gray-100 bg-white text-gray-500'
+                    : ewTone.cardBg
+                }`}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex w-full items-center justify-between">
                   <span
-                    className={`text-[10px] font-medium uppercase tracking-wider ${ewTone.cardSubtext}`}
+                    className={`text-[10px] font-medium uppercase tracking-wider ${
+                      loadingPortfolio && !portfolio ? 'text-gray-400' : ewTone.cardSubtext
+                    }`}
                   >
                     Early Warning Proyek
                   </span>
-                  <span className={`h-2.5 w-2.5 rounded-full ring-2 ${ewTone.dot}`} />
+                  {!(loadingPortfolio && !portfolio) && (
+                    <span className={`h-2.5 w-2.5 rounded-full ring-2 ${ewTone.dot}`} />
+                  )}
                 </div>
-                <div className="text-2xl font-bold">{ewTone.label}</div>
-                <div className={`text-xs ${ewTone.cardSubtext}`}>
-                  {portfolio?.ringkasan.proyek_berisiko
-                    ? `${portfolio.ringkasan.proyek_berisiko} proyek berisiko terlambat`
-                    : 'Semua proyek sesuai Kurva S'}
-                </div>
-              </div>
+                {loadingPortfolio && !portfolio ? (
+                  <>
+                    <div className="h-7 w-28 animate-pulse rounded-lg bg-slate-200" />
+                    <div className="h-3.5 w-40 animate-pulse rounded bg-slate-100" />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">{ewTone.label}</div>
+                    <div className={`flex w-full items-center justify-between gap-1 text-xs ${ewTone.cardSubtext}`}>
+                      <span className="truncate">
+                        {portfolio?.ringkasan.proyek_berisiko
+                          ? `${portfolio.ringkasan.proyek_berisiko} proyek berisiko terlambat`
+                          : 'Semua proyek sesuai Kurva S'}
+                      </span>
+                      {onGoToProyek && <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-80" />}
+                    </div>
+                  </>
+                )}
+              </button>
 
               <div className="flex h-[125px] flex-col justify-between rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                 <div className="text-[10px] font-medium uppercase tracking-wider text-gray-400">

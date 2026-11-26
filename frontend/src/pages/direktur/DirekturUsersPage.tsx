@@ -489,14 +489,15 @@ export const DirekturUsersPage: React.FC<DirekturUsersPageProps> = ({ currentUse
                   {projects.length === 0 ? (
                     <div className="text-[11px] text-gray-400">Belum ada proyek terdaftar.</div>
                   ) : (
-                    <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
+                    <div className="grid max-h-40 grid-cols-1 gap-2 overflow-y-auto pr-1">
                       {projects.map((proj) => (
                         <CustomCheckbox
                           key={proj.id_proyek}
                           checked={selectedProjectIds.includes(proj.id_proyek)}
                           onChange={() => toggleProjectAccess(proj.id_proyek)}
+                          className="w-full"
                           label={
-                            <span>
+                            <span className="break-words">
                               <strong className="font-mono text-[#1877F2]">
                                 {proj.kode_proyek}
                               </strong>{' '}

@@ -3,21 +3,36 @@ import { useQuery } from '@tanstack/react-query';
 import {
   kendalaService,
   progressService,
+  terminService,
   type KendalaLapangan,
   type ProgresFisik,
+  type TerminListItem,
 } from '../../services';
-import { formatTanggal } from '../../lib/formatters';
+import { formatRupiahCompact, formatTanggal } from '../../lib/formatters';
 import { SkeletonTable } from '../ui';
 import { PhotoThumbnailGrid } from './MultiPhotoPicker';
 import { normalizeFotoPaths } from '../../lib/mediaHelpers';
-import { Activity, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { Activity, AlertTriangle, Banknote, CheckCircle2, Info } from 'lucide-react';
 
 interface ProjectMonitoringPanelProps {
   proyekId: number;
 }
 
+function getTerminStatusBadge(status: TerminListItem['status_penagihan']) {
+  switch (status) {
+    case 'SP2D cair':
+      return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+    case 'Siap serah':
+      return 'bg-amber-100 text-amber-900 border border-amber-200';
+    case 'Diajukan ke Dinas':
+      return 'bg-sky-50 text-sky-700 border border-sky-200';
+    default:
+      return 'bg-gray-100 text-gray-600 border border-gray-200';
+  }
+}
+
 /**
- * Panel pemantauan Progres Fisik & Riwayat Kendala Lapangan (beserta multi-foto)
+ * Panel pemantauan Progres Fisik, Riwayat Kendala Lapangan (multi-foto), & Status Termin/SP2D
  * yang dipakai bersama oleh Keuangan dan Direktur agar tidak ada blind-spot.
  */
 export const ProjectMonitoringPanel: React.FC<ProjectMonitoringPanelProps> = ({ proyekId }) => {
@@ -29,6 +44,11 @@ export const ProjectMonitoringPanel: React.FC<ProjectMonitoringPanelProps> = ({ 
   const { data: kendalaList = [], isLoading: loadingKendala } = useQuery<KendalaLapangan[]>({
     queryKey: ['kendala', 'list', proyekId],
     queryFn: () => kendalaService.list(proyekId),
+  });
+
+  const { data: terminList = [], isLoading: loadingTermin } = useQuery<TerminListItem[]>({
+    queryKey: ['termin', 'list', proyekId],
+    queryFn: () => terminService.listByProject(proyekId),
   });
 
   return (
@@ -45,6 +65,59 @@ export const ProjectMonitoringPanel: React.FC<ProjectMonitoringPanelProps> = ({ 
             <em>Berkas Checklist</em>.
           </p>
         </div>
+      </div>
+
+      {/* Ringkasan Status Termin & SP2D agar Direktur & Keuangan melihat status pencairan */}
+      <div className="space-y-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+          <div className="flex items-center gap-2 font-bold text-gray-900">
+            <Banknote className="h-4 w-4 text-emerald-600" />
+            <span>Status Penagihan Termin &amp; SP2D ({terminList.length})</span>
+          </div>
+        </div>
+
+        {loadingTermin ? (
+          <SkeletonTable rows={2} cols={3} />
+        ) : terminList.length === 0 ? (
+          <div className="rounded-xl border border-gray-100 bg-slate-50 p-4 text-center text-gray-400">
+            Belum ada jadwal termin terdaftar pada proyek ini.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {terminList.map((t) => (
+              <div
+                key={t.id_termin}
+                className="flex flex-col justify-between gap-2 rounded-2xl border border-gray-100 bg-slate-50/80 p-3.5"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-1.5">
+                  <span className="font-bold text-gray-900">
+                    Termin {t.nomor_termin} ({t.target_persentase}%)
+                  </span>
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${getTerminStatusBadge(
+                      t.status_penagihan
+                    )}`}
+                  >
+                    {t.status_penagihan}
+                  </span>
+                </div>
+                <div className="font-mono text-sm font-bold text-gray-900">
+                  {formatRupiahCompact(t.nilai_tagihan)}
+                </div>
+                <div className="text-[11px] text-gray-500">
+                  Tenggat: {formatTanggal(t.tenggat_waktu)} • Berkas {t.checklist.terverifikasi}/
+                  {t.checklist.total}
+                </div>
+                {t.nomor_sp2d && (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-800">
+                    SP2D: {t.nomor_sp2d}
+                    {t.tanggal_cair ? ` (${formatTanggal(t.tanggal_cair)})` : ''}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">

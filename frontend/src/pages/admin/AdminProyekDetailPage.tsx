@@ -19,6 +19,7 @@ import { extractApiError } from '../../lib/api';
 import { formatTanggal } from '../../lib/formatters';
 import { EarlyWarningStatusBanner } from '../../components/common/EarlyWarningVisuals';
 import { MaterialRequestModal } from '../../components/admin/MaterialRequestModal';
+import { WeatherForecastWidget } from '../../components/admin/WeatherForecastWidget';
 import { DocumentPreviewModal } from '../../components/common/DocumentPreviewModal';
 import {
   MultiPhotoPicker,
@@ -464,7 +465,9 @@ export const AdminProyekDetailPage: React.FC<AdminProyekDetailPageProps> = ({
 
       {/* SUB-HALAMAN 1: INPUT PROGRES FISIK */}
       {featureView === 'progres' && (
-        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
+        <div className="space-y-5">
+          <WeatherForecastWidget />
+          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
           <div className="space-y-3 lg:col-span-4">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
               Riwayat Progres Terbaru ({progressList.length})
@@ -620,6 +623,7 @@ export const AdminProyekDetailPage: React.FC<AdminProyekDetailPageProps> = ({
               </div>
             </form>
           </div>
+        </div>
         </div>
       )}
 

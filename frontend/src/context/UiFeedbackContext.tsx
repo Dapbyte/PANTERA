@@ -279,13 +279,13 @@ export const UiFeedbackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         </div>
       )}
 
-      {/* Floating Toasts */}
+      {/* Floating Toasts (posisi bawah agar tidak menutupi tombol aksi kanan atas di desktop/mobile) */}
       {toasts.length > 0 && (
-        <div className="fixed right-4 top-4 z-[80] flex max-w-sm flex-col gap-2">
+        <div className="pointer-events-none fixed bottom-20 left-3 right-3 z-[80] flex flex-col gap-2 sm:bottom-5 sm:left-auto sm:right-4 sm:w-full sm:max-w-sm">
           {toasts.map((t) => (
             <div
               key={t.id}
-              className={`flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-xs shadow-lg backdrop-blur-md ${
+              className={`pointer-events-auto flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-xs shadow-lg backdrop-blur-md ${
                 t.type === 'error'
                   ? 'border-rose-200 bg-rose-50 text-rose-800'
                   : t.type === 'success'

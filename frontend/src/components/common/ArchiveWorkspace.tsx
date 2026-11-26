@@ -43,8 +43,11 @@ import {
   ChevronRight,
   MapPin,
   Eye,
+  ExternalLink,
   LayoutGrid,
   List,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 
 interface ArchiveWorkspaceProps {
@@ -238,6 +241,7 @@ export const ArchiveWorkspace: React.FC<ArchiveWorkspaceProps> = ({
   const [previewContentType, setPreviewContentType] = useState<string>('');
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewZoom, setPreviewZoom] = useState(100);
   const [editLocationMode, setEditLocationMode] = useState(false);
   const [editRuang, setEditRuang] = useState('');
   const [editRak, setEditRak] = useState('');
@@ -289,17 +293,34 @@ export const ArchiveWorkspace: React.FC<ArchiveWorkspaceProps> = ({
     setEditLocationMode(false);
     setPreviewError(null);
     setPreviewContentType('');
+    setPreviewZoom(100);
     if (previewObjectUrl) {
       URL.revokeObjectURL(previewObjectUrl);
       setPreviewObjectUrl(null);
     }
   };
 
+  useEffect(() => {
+    if (!selectedDetail && !loadingDetail) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedDetail(null);
+        setEditLocationMode(false);
+        setPreviewError(null);
+        setPreviewContentType('');
+        setPreviewZoom(100);
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [selectedDetail, loadingDetail]);
+
   const handleOpenDetail = async (item: ArsipDokumen) => {
     setLoadingDetail(true);
     setEditLocationMode(false);
     setEditLocError(null);
     setPreviewError(null);
+    setPreviewZoom(100);
     if (previewObjectUrl) {
       URL.revokeObjectURL(previewObjectUrl);
       setPreviewObjectUrl(null);
@@ -509,7 +530,11 @@ export const ArchiveWorkspace: React.FC<ArchiveWorkspaceProps> = ({
   const getLokasiLabel = (item: ArsipDokumen) => {
     const loc = item.lokasi_arsip_fisik;
     if (!loc) return item.tipe_penyimpanan === 'Digital' ? 'Digital Only' : '—';
-    return `${loc.ruang_simpan} • Rak ${loc.nomor_rak} • Binder ${loc.nomor_binder}`;
+    const rakTrim = loc.nomor_rak.trim();
+    const binderTrim = loc.nomor_binder.trim();
+    const rakLabel = /^rak\b/i.test(rakTrim) ? rakTrim : `Rak ${rakTrim}`;
+    const binderLabel = /^binder\b/i.test(binderTrim) ? binderTrim : `Binder ${binderTrim}`;
+    return `${loc.ruang_simpan} • ${rakLabel} • ${binderLabel}`;
   };
 
   const getTipeBadge = (tipe: StorageType) => {
@@ -674,7 +699,7 @@ export const ArchiveWorkspace: React.FC<ArchiveWorkspaceProps> = ({
         </div>
 
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-12">
-          <div className="relative lg:col-span-3">
+          <div className="relative sm:col-span-2 lg:col-span-4">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
@@ -688,7 +713,7 @@ export const ArchiveWorkspace: React.FC<ArchiveWorkspaceProps> = ({
             />
           </div>
 
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-4">
             <CustomSelect
               ariaLabel="Filter proyek arsip"
               searchable
@@ -723,7 +748,7 @@ export const ArchiveWorkspace: React.FC<ArchiveWorkspaceProps> = ({
             />
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-2">
             <CustomSelect
               ariaLabel="Filter tipe penyimpanan"
               value={tipePenyimpanan}
@@ -740,7 +765,7 @@ export const ArchiveWorkspace: React.FC<ArchiveWorkspaceProps> = ({
             />
           </div>
 
-          <div className="relative lg:col-span-2">
+          <div className="relative lg:col-span-9">
             <MapPin className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
@@ -755,7 +780,7 @@ export const ArchiveWorkspace: React.FC<ArchiveWorkspaceProps> = ({
             />
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-3">
             <CustomSelect
               ariaLabel="Urutkan tanggal arsip"
               value={sortOrder}
@@ -1060,17 +1085,19 @@ export const ArchiveWorkspace: React.FC<ArchiveWorkspaceProps> = ({
       {(selectedDetail || loadingDetail) && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/65 p-3 backdrop-blur-sm sm:p-5"
+          role="dialog"
+          aria-modal="true"
           onClick={closeDetailModal}
         >
           <div
-            className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+            className="flex max-h-[92dvh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-              <div>
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3.5 sm:px-6 sm:py-4">
+              <div className="min-w-0 pr-2">
                 <h3 className="text-base font-bold text-gray-900">Rincian &amp; Pratinjau Arsip</h3>
                 {selectedDetail && (
-                  <p className="text-[11px] font-mono text-[#1877F2]">
+                  <p className="truncate text-[11px] font-mono text-[#1877F2]">
                     {selectedDetail.kode_arsip} • No. Surat: {selectedDetail.nomor_surat}
                   </p>
                 )}
@@ -1079,7 +1106,7 @@ export const ArchiveWorkspace: React.FC<ArchiveWorkspaceProps> = ({
                 type="button"
                 aria-label="Tutup rincian arsip"
                 onClick={closeDetailModal}
-                className="rounded-full bg-slate-100 p-2 text-gray-600 hover:bg-rose-50 hover:text-rose-600"
+                className="shrink-0 rounded-full bg-slate-100 p-2 text-gray-600 hover:bg-rose-50 hover:text-rose-600"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1091,27 +1118,69 @@ export const ArchiveWorkspace: React.FC<ArchiveWorkspaceProps> = ({
                 <span>Memuat detail arsip…</span>
               </div>
             ) : (
-              <div className="grid flex-1 grid-cols-1 gap-5 overflow-y-auto p-6 lg:grid-cols-12">
+              <div className="grid flex-1 grid-cols-1 gap-5 overflow-y-auto p-4 sm:p-6 lg:grid-cols-12">
                 {/* Panel Kiri: Preview Dokumen Langsung di Website */}
-                <div className="flex flex-col rounded-2xl border border-gray-200 bg-slate-50 lg:col-span-7 overflow-hidden min-h-[320px]">
-                  <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-2.5 text-xs">
+                <div className="flex min-h-[300px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-slate-50 lg:col-span-7 sm:min-h-[340px]">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-white px-3.5 py-2.5 text-xs sm:px-4">
                     <span className="flex items-center gap-2 font-semibold text-gray-800">
                       <FileText className="h-4 w-4 text-[#1877F2]" />
                       <span>Pratinjau Dokumen</span>
                     </span>
                     {selectedDetail.path_digital && (
-                      <button
-                        type="button"
-                        onClick={() => void handleDownloadArchive(selectedDetail)}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-[#1877F2] px-3.5 py-1.5 text-[11px] font-semibold text-white hover:bg-blue-600"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                        <span>Unduh</span>
-                      </button>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {previewObjectUrl && (
+                          <>
+                            <div className="inline-flex items-center rounded-full border border-gray-200 bg-slate-50 p-0.5 text-[11px]">
+                              <button
+                                type="button"
+                                aria-label="Perkecil pratinjau arsip"
+                                onClick={() => setPreviewZoom((z) => Math.max(50, z - 25))}
+                                className="rounded-full p-1 text-gray-600 hover:bg-white hover:text-[#1877F2]"
+                              >
+                                <ZoomOut className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label="Reset zoom pratinjau arsip"
+                                onClick={() => setPreviewZoom(100)}
+                                className="px-1.5 font-mono text-[10px] font-semibold text-gray-700"
+                              >
+                                {previewZoom}%
+                              </button>
+                              <button
+                                type="button"
+                                aria-label="Perbesar pratinjau arsip"
+                                onClick={() => setPreviewZoom((z) => Math.min(200, z + 25))}
+                                className="rounded-full p-1 text-gray-600 hover:bg-white hover:text-[#1877F2]"
+                              >
+                                <ZoomIn className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                window.open(previewObjectUrl, '_blank', 'noopener,noreferrer')
+                              }
+                              className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 hover:bg-gray-100"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              <span className="hidden sm:inline">Tab Baru</span>
+                            </button>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => void handleDownloadArchive(selectedDetail)}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-[#1877F2] px-3.5 py-1.5 text-[11px] font-semibold text-white hover:bg-blue-600"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>Unduh</span>
+                        </button>
+                      </div>
                     )}
                   </div>
 
-                  <div className="flex flex-1 items-center justify-center p-3">
+                  <div className="flex flex-1 items-center justify-center overflow-auto p-3">
                     {!selectedDetail.path_digital ? (
                       <div className="text-center text-xs text-gray-500 space-y-1.5 p-6">
                         <FolderArchive className="mx-auto h-10 w-10 text-gray-300" />
@@ -1129,17 +1198,32 @@ export const ArchiveWorkspace: React.FC<ArchiveWorkspaceProps> = ({
                       </div>
                     ) : previewObjectUrl ? (
                       isPdfPreview ? (
-                        <iframe
-                          title={`Preview ${selectedDetail.judul_dokumen}`}
-                          src={previewObjectUrl}
-                          className="h-[460px] w-full rounded-xl border border-gray-200 bg-white"
-                        />
+                        <div className="h-[340px] w-full overflow-auto rounded-xl border border-gray-200 bg-white sm:h-[460px]">
+                          <iframe
+                            title={`Preview ${selectedDetail.judul_dokumen}`}
+                            src={previewObjectUrl}
+                            style={{
+                              width: `${previewZoom}%`,
+                              height: `${Math.max(100, previewZoom)}%`,
+                              minWidth: '100%',
+                              minHeight: '100%',
+                            }}
+                            className="block border-0 bg-white"
+                          />
+                        </div>
                       ) : (
-                        <img
-                          src={previewObjectUrl}
-                          alt={selectedDetail.judul_dokumen}
-                          className="max-h-[460px] w-auto rounded-xl object-contain shadow-sm"
-                        />
+                        <div className="flex max-h-[460px] w-full items-center justify-center overflow-auto">
+                          <img
+                            src={previewObjectUrl}
+                            alt={selectedDetail.judul_dokumen}
+                            style={{ width: previewZoom === 100 ? undefined : `${previewZoom}%` }}
+                            className={
+                              previewZoom === 100
+                                ? 'max-h-[440px] w-auto rounded-xl object-contain shadow-sm'
+                                : 'h-auto max-w-none rounded-xl object-contain shadow-sm'
+                            }
+                          />
+                        </div>
                       )
                     ) : null}
                   </div>

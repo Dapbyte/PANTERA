@@ -39,7 +39,7 @@ export const SekretarisBerandaPage: React.FC<SekretarisBerandaPageProps> = ({
     queryFn: () => projectService.getProjects(),
   });
 
-  const { data: portfolio = null } = useQuery<EarlyWarningPortfolio>({
+  const { data: portfolio = null, isLoading: loadingPortfolio } = useQuery<EarlyWarningPortfolio>({
     queryKey: ['early-warning', 'portfolio'],
     queryFn: () => earlyWarningService.getPortfolio(),
   });
@@ -113,28 +113,45 @@ export const SekretarisBerandaPage: React.FC<SekretarisBerandaPageProps> = ({
               </div>
 
               <div
-                className={`flex h-[125px] flex-col justify-between rounded-2xl p-5 shadow-md ${ewTone.cardBg}`}
+                className={`flex h-[125px] flex-col justify-between rounded-2xl p-5 shadow-md ${
+                  loadingPortfolio && !portfolio
+                    ? 'border border-gray-100 bg-white text-gray-500'
+                    : ewTone.cardBg
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <span
-                    className={`text-[10px] font-medium uppercase tracking-wider ${ewTone.cardSubtext}`}
+                    className={`text-[10px] font-medium uppercase tracking-wider ${
+                      loadingPortfolio && !portfolio ? 'text-gray-400' : ewTone.cardSubtext
+                    }`}
                   >
                     Peringatan Dini
                   </span>
-                  <span className={`h-2.5 w-2.5 rounded-full ring-2 ${ewTone.dot}`} />
+                  {!(loadingPortfolio && !portfolio) && (
+                    <span className={`h-2.5 w-2.5 rounded-full ring-2 ${ewTone.dot}`} />
+                  )}
                 </div>
-                <div className="text-2xl font-bold tracking-tight">
-                  {portfolioStatus === 'Aman'
-                    ? 'Aman'
-                    : portfolioStatus === 'Waspada'
-                      ? 'Perlu Perhatian'
-                      : 'Kondisi Kritis'}
-                </div>
-                <div className={`text-xs ${ewTone.cardSubtext}`}>
-                  {portfolio?.ringkasan.proyek_berisiko
-                    ? `${portfolio.ringkasan.proyek_berisiko} proyek berpotensi terlambat`
-                    : '0 proyek berisiko • Semua aman sesuai Kurva S'}
-                </div>
+                {loadingPortfolio && !portfolio ? (
+                  <>
+                    <div className="h-7 w-32 animate-pulse rounded-lg bg-slate-200" />
+                    <div className="h-3.5 w-44 animate-pulse rounded bg-slate-100" />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold tracking-tight">
+                      {portfolioStatus === 'Aman'
+                        ? 'Aman'
+                        : portfolioStatus === 'Waspada'
+                          ? 'Perlu Perhatian'
+                          : 'Kondisi Kritis'}
+                    </div>
+                    <div className={`text-xs ${ewTone.cardSubtext}`}>
+                      {portfolio?.ringkasan.proyek_berisiko
+                        ? `${portfolio.ringkasan.proyek_berisiko} proyek berpotensi terlambat`
+                        : '0 proyek berisiko • Semua aman sesuai Kurva S'}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="flex h-[125px] flex-col justify-between rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">

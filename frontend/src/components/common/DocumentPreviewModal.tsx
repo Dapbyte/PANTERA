@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { extractApiError } from '../../lib/api';
-import { Download, FileText, Loader2, X } from 'lucide-react';
+import { Download, ExternalLink, FileText, Loader2, X, ZoomIn, ZoomOut } from 'lucide-react';
 
 export interface DocumentPreviewModalProps {
   title: string;
@@ -13,7 +13,7 @@ export interface DocumentPreviewModalProps {
 }
 
 /**
- * Modal preview dokumen inline reusable (mendukung PDF, gambar, serta berkas lokal maupun remote terautentikasi).
+ * Modal preview dokumen inline reusable (PDF, gambar, kontrol zoom, dan fallback Buka di Tab Baru).
  */
 export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   title,
@@ -27,6 +27,15 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   const [remoteState, setRemoteState] = useState<{ url: string; contentType: string } | null>(null);
   const [remoteError, setRemoteError] = useState<string | null>(null);
   const [localState, setLocalState] = useState<{ file: File; url: string } | null>(null);
+  const [zoom, setZoom] = useState(100);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
 
   // Buat dan cabut Object URL di dalam useEffect yang sama agar aman di React StrictMode
   useEffect(() => {
@@ -89,11 +98,11 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+        className="flex max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5 sm:px-6">
-          <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-4 py-3.5 sm:px-6">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#1877F2]">
               <FileText className="h-4 w-4" />
             </div>
@@ -103,7 +112,45 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {objectUrl && (isPdf || isImage) && (
+              <div className="inline-flex items-center rounded-full border border-gray-200 bg-slate-50 p-0.5 text-[11px]">
+                <button
+                  type="button"
+                  aria-label="Perkecil pratinjau"
+                  onClick={() => setZoom((z) => Math.max(50, z - 25))}
+                  className="rounded-full p-1.5 text-gray-600 hover:bg-white hover:text-[#1877F2]"
+                >
+                  <ZoomOut className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Reset zoom pratinjau"
+                  onClick={() => setZoom(100)}
+                  className="px-2 font-mono text-[11px] font-semibold text-gray-700"
+                >
+                  {zoom}%
+                </button>
+                <button
+                  type="button"
+                  aria-label="Perbesar pratinjau"
+                  onClick={() => setZoom((z) => Math.min(200, z + 25))}
+                  className="rounded-full p-1.5 text-gray-600 hover:bg-white hover:text-[#1877F2]"
+                >
+                  <ZoomIn className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+            {objectUrl && (
+              <button
+                type="button"
+                onClick={() => window.open(objectUrl, '_blank', 'noopener,noreferrer')}
+                className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-gray-700 hover:bg-gray-100"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Tab Baru</span>
+              </button>
+            )}
             {onDownload && (
               <button
                 type="button"
@@ -125,7 +172,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-1 items-center justify-center overflow-auto bg-slate-50 p-4 min-h-[360px]">
+        <div className="flex flex-1 items-center justify-center overflow-auto bg-slate-50 p-3 min-h-[300px] sm:min-h-[360px] sm:p-4">
           {isLoading ? (
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <Loader2 className="h-5 w-5 animate-spin text-[#1877F2]" />
@@ -137,17 +184,32 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             </div>
           ) : objectUrl ? (
             isPdf ? (
-              <iframe
-                title={`Preview ${title}`}
-                src={objectUrl}
-                className="h-[68vh] w-full rounded-xl border border-gray-200 bg-white"
-              />
+              <div className="h-[64dvh] w-full overflow-auto rounded-xl border border-gray-200 bg-white">
+                <iframe
+                  title={`Preview ${title}`}
+                  src={objectUrl}
+                  style={{
+                    width: `${zoom}%`,
+                    height: `${Math.max(100, zoom)}%`,
+                    minWidth: '100%',
+                    minHeight: '100%',
+                  }}
+                  className="block border-0 bg-white"
+                />
+              </div>
             ) : isImage ? (
-              <img
-                src={objectUrl}
-                alt={title}
-                className="max-h-[68vh] w-auto rounded-xl object-contain shadow-sm"
-              />
+              <div className="flex max-h-[68dvh] w-full items-center justify-center overflow-auto">
+                <img
+                  src={objectUrl}
+                  alt={title}
+                  style={{ width: zoom === 100 ? undefined : `${zoom}%` }}
+                  className={
+                    zoom === 100
+                      ? 'max-h-[64dvh] w-auto rounded-xl object-contain shadow-sm'
+                      : 'h-auto max-w-none rounded-xl object-contain shadow-sm'
+                  }
+                />
+              </div>
             ) : (
               <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-xs text-gray-600 space-y-2">
                 <FileText className="mx-auto h-10 w-10 text-[#1877F2]" />

@@ -407,9 +407,10 @@ export const SekretarisValidasiPage: React.FC<SekretarisValidasiPageProps> = ({
                   <button
                     key={opt}
                     type="button"
+                    aria-pressed={skema === opt}
                     disabled={!canReview}
                     onClick={() => setSkema(opt)}
-                    className={`rounded-xl border px-4 py-2.5 text-xs font-semibold transition ${
+                    className={`rounded-xl border px-4 py-2.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1877F2]/40 ${
                       skema === opt
                         ? 'border-[#1877F2] bg-[#1877F2] text-white shadow-sm'
                         : 'border-gray-200 bg-slate-50 text-gray-700 hover:bg-gray-100'
