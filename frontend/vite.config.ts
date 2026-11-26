@@ -17,7 +17,16 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'favicon.png', 'logo-pantera-navy.png', 'logo-pantera-white.png'],
+        includeAssets: [
+          'favicon.ico',
+          'favicon.png',
+          'logo-pantera-navy.png',
+          'logo-pantera-white.png',
+          'intro/PANTERA_blue.png',
+          'intro/PANTERA_white.png',
+          'intro/DJASIPA_blue.png',
+          'intro/DJASIPA_white.png',
+        ],
         manifest: {
           name: 'PANTERA - Pemantauan Arsip, Termin & Risiko',
           short_name: 'PANTERA',

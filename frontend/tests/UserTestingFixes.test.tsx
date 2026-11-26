@@ -5,11 +5,20 @@ import { PanteraLogo } from '../src/components/common/PanteraLogo';
 import { MultiPhotoPicker } from '../src/components/common/MultiPhotoPicker';
 import { DownloadPerformanceReportButton } from '../src/components/common/DownloadPerformanceReportButton';
 import { DocumentPreviewModal } from '../src/components/common/DocumentPreviewModal';
+import { INTRO_SEEN_KEY, PanteraIntroSplash } from '../src/components/common/PanteraIntroSplash';
 import { CustomSelect, WheelDatePicker } from '../src/components/ui';
 import { api } from '../src/lib/api';
 import { UiFeedbackProvider } from '../src/context/UiFeedbackContext';
+import { SekretarisTerminListPage } from '../src/pages/sekretaris/SekretarisTerminListPage';
 import { SekretarisValidasiPage } from '../src/pages/sekretaris/SekretarisValidasiPage';
-import { bankCreditService, materialService, type PerformanceReport, type RequestMaterial } from '../src/services';
+import {
+  bankCreditService,
+  earlyWarningService,
+  materialService,
+  projectService,
+  type PerformanceReport,
+  type RequestMaterial,
+} from '../src/services';
 import { useState } from 'react';
 
 vi.mock('../src/services', async () => {
@@ -23,6 +32,14 @@ vi.mock('../src/services', async () => {
     bankCreditService: {
       ...actual.bankCreditService,
       getPerformanceReport: vi.fn(),
+    },
+    projectService: {
+      ...actual.projectService,
+      getProjects: vi.fn(),
+    },
+    earlyWarningService: {
+      ...actual.earlyWarningService,
+      getPortfolio: vi.fn(),
     },
   };
 });
@@ -315,5 +332,65 @@ describe('User Testing Fixes Regression Suite', () => {
 
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('DocumentPreviewModal hides CSS zoom controls for PDF files, renders mobile Tab Baru fallback, and closes on Escape', async () => {
+    const onClose = vi.fn();
+    const pdfFile = new File(['%PDF-1.4'], 'kontrak.pdf', { type: 'application/pdf' });
+
+    render(
+      <DocumentPreviewModal title="Kontrak PDF" localFile={pdfFile} onClose={onClose} />
+    );
+
+    expect(await screen.findByRole('button', { name: /Buka PDF di Tab Baru/i })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Perbesar pratinjau')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Perkecil pratinjau')).not.toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('PanteraIntroSplash renders brand text and marks sessionStorage seen on skip', () => {
+    sessionStorage.removeItem(INTRO_SEEN_KEY);
+    const onComplete = vi.fn();
+
+    render(<PanteraIntroSplash onComplete={onComplete} forcePlay />);
+
+    expect(screen.getAllByText('ANTERA').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Pemantauan Arsip Termin Risiko').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('POWERED BY').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('PT Djasipa Mitra Perkasa').length).toBeGreaterThanOrEqual(1);
+
+    fireEvent.click(screen.getByRole('button', { name: /Lewati animasi intro/i }));
+
+    expect(sessionStorage.getItem(INTRO_SEEN_KEY)).toBe('1');
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('SekretarisTerminListPage renders status filters as top navbar tabs with blue underline when active', async () => {
+    vi.mocked(projectService.getProjects).mockResolvedValueOnce([]);
+    vi.mocked(earlyWarningService.getPortfolio).mockResolvedValueOnce({
+      ringkasan: { total_proyek: 0, proyek_berisiko: 0, total_estimasi_kerugian: 0 },
+      proyek: [],
+    });
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <SekretarisTerminListPage onSelectProyek={vi.fn()} />
+      </QueryClientProvider>
+    );
+
+    const semuaTab = await screen.findByRole('tab', { name: 'Semua' });
+    const waspadaTab = screen.getByRole('tab', { name: 'Waspada' });
+
+    expect(semuaTab).toHaveAttribute('aria-selected', 'true');
+    expect(semuaTab.className).toContain('border-[#1877F2]');
+    expect(semuaTab.className).not.toContain('rounded-full');
+
+    fireEvent.click(waspadaTab);
+    expect(waspadaTab).toHaveAttribute('aria-selected', 'true');
+    expect(waspadaTab.className).toContain('border-[#1877F2]');
+    expect(semuaTab).toHaveAttribute('aria-selected', 'false');
   });
 });

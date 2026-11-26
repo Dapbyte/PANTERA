@@ -33,8 +33,8 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
+    window.addEventListener('keydown', handleEsc, true);
+    return () => window.removeEventListener('keydown', handleEsc, true);
   }, [onClose]);
 
   // Buat dan cabut Object URL di dalam useEffect yang sama agar aman di React StrictMode
@@ -113,7 +113,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            {objectUrl && (isPdf || isImage) && (
+            {objectUrl && !isPdf && isImage && (
               <div className="inline-flex items-center rounded-full border border-gray-200 bg-slate-50 p-0.5 text-[11px]">
                 <button
                   type="button"
@@ -184,19 +184,55 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             </div>
           ) : objectUrl ? (
             isPdf ? (
-              <div className="h-[64dvh] w-full overflow-auto rounded-xl border border-gray-200 bg-white">
-                <iframe
-                  title={`Preview ${title}`}
-                  src={objectUrl}
-                  style={{
-                    width: `${zoom}%`,
-                    height: `${Math.max(100, zoom)}%`,
-                    minWidth: '100%',
-                    minHeight: '100%',
-                  }}
-                  className="block border-0 bg-white"
-                />
-              </div>
+              <>
+                <div className="hidden w-full sm:block">
+                  <div className="relative isolate h-[64dvh] w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
+                    <iframe
+                      title={`Preview ${title}`}
+                      src={objectUrl}
+                      className="h-full w-full border-0 bg-white"
+                    />
+                  </div>
+                </div>
+                <div className="w-full sm:hidden">
+                  <div className="flex flex-col items-center rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-[#1877F2]">
+                      <FileText className="h-6 w-6" />
+                    </div>
+                    <div className="w-full truncate text-xs font-bold text-gray-900">
+                      {localFile?.name || fileNameHint || title}
+                    </div>
+                    {subtitle && (
+                      <div className="mt-0.5 w-full truncate text-[11px] text-gray-500">
+                        {subtitle}
+                      </div>
+                    )}
+                    <p className="mt-2 text-[11px] text-gray-500">
+                      Pratinjau PDF di layar kecil dibuka di tab baru agar tampilan tetap rapi.
+                    </p>
+                    <div className="mt-4 flex w-full flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() => window.open(objectUrl, '_blank', 'noopener,noreferrer')}
+                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-[#1877F2] px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-600"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        <span>Buka PDF di Tab Baru</span>
+                      </button>
+                      {onDownload && (
+                        <button
+                          type="button"
+                          onClick={() => void onDownload()}
+                          className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>Unduh</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
             ) : isImage ? (
               <div className="flex max-h-[68dvh] w-full items-center justify-center overflow-auto">
                 <img

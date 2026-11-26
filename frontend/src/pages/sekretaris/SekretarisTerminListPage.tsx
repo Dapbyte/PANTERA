@@ -135,32 +135,43 @@ export const SekretarisTerminListPage: React.FC<SekretarisTerminListPageProps> =
           </div>
 
           {/* Filter and Search Bar */}
-          <div className="flex flex-wrap items-center gap-2.5 pt-2">
-            <div className="relative flex items-center">
+          <div className="flex flex-col gap-3 border-b border-gray-200 pb-0 pt-2 sm:flex-row sm:items-end sm:justify-between">
+            <div className="relative flex w-full items-center sm:w-64 sm:pb-2">
               <Search className="pointer-events-none absolute left-3.5 h-3.5 w-3.5 text-gray-400" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Cari kode, dinas, atau judul..."
-                className="w-64 rounded-full border border-gray-200 bg-white py-2 pl-9 pr-4 text-xs text-gray-800 placeholder-gray-400 shadow-sm focus:border-[#1877F2] focus:outline-none"
+                className="w-full rounded-full border border-gray-200 bg-white py-2 pl-9 pr-4 text-xs text-gray-800 placeholder-gray-400 shadow-sm focus:border-[#1877F2] focus:outline-none"
               />
             </div>
 
-            {(['Semua', 'Aman', 'Waspada', 'Kritis'] as const).map((st) => (
-              <button
-                key={st}
-                type="button"
-                onClick={() => setSelectedStatus(st)}
-                className={`rounded-full px-4 py-2 text-xs font-medium transition ${
-                  selectedStatus === st
-                    ? 'bg-gray-900 text-white shadow-sm'
-                    : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {st}
-              </button>
-            ))}
+            <div
+              role="tablist"
+              aria-label="Filter status pemantauan proyek"
+              className="-mb-px flex items-center gap-5 overflow-x-auto px-1"
+            >
+              {(['Semua', 'Aman', 'Waspada', 'Kritis'] as const).map((st) => {
+                const isActive = selectedStatus === st;
+                return (
+                  <button
+                    key={st}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setSelectedStatus(st)}
+                    className={`shrink-0 whitespace-nowrap border-b-2 pb-2.5 pt-1 text-xs font-semibold transition ${
+                      isActive
+                        ? 'border-[#1877F2] text-[#1877F2]'
+                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-800'
+                    }`}
+                  >
+                    {st}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">

@@ -381,37 +381,39 @@ export const SekretarisTerminDetailPage: React.FC<SekretarisTerminDetailPageProp
       </div>
 
       {/* Top Navbar Tabs dengan underline biru aktif (1.2 UI/UX) */}
-      <div
-        role="tablist"
-        aria-label="Navigasi fitur pemantauan proyek"
-        className="flex items-center gap-6 overflow-x-auto border-b border-gray-200 px-1"
-      >
-        {(
-          [
-            { key: 'peringatan', label: 'Peringatan Dini' },
-            { key: 'monitoring', label: 'Progres & Kendala' },
-            { key: 'berkas', label: 'Berkas Checklist' },
-            { key: 'penagihan', label: 'Penagihan & SP2D' },
-          ] as const
-        ).map((tab) => {
-          const isActive = activeTab === tab.key;
-          return (
-            <button
-              key={tab.key}
-              role="tab"
-              aria-selected={isActive}
-              type="button"
-              onClick={() => setActiveTab(tab.key)}
-              className={`whitespace-nowrap border-b-2 pb-3 pt-1 text-xs font-semibold ${
-                isActive
-                  ? 'border-[#1877F2] text-[#1877F2]'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-800'
-              }`}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
+      <div className="border-b border-gray-200">
+        <div
+          role="tablist"
+          aria-label="Navigasi fitur pemantauan proyek"
+          className="-mb-px flex items-center gap-6 overflow-x-auto px-1"
+        >
+          {(
+            [
+              { key: 'peringatan', label: 'Peringatan Dini' },
+              { key: 'monitoring', label: 'Progres & Kendala' },
+              { key: 'berkas', label: 'Berkas Checklist' },
+              { key: 'penagihan', label: 'Penagihan & SP2D' },
+            ] as const
+          ).map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                role="tab"
+                aria-selected={isActive}
+                type="button"
+                onClick={() => setActiveTab(tab.key)}
+                className={`shrink-0 whitespace-nowrap border-b-2 pb-3 pt-1 text-xs font-semibold transition ${
+                  isActive
+                    ? 'border-[#1877F2] text-[#1877F2]'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-800'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* TAB 1: PERINGATAN DINI */}

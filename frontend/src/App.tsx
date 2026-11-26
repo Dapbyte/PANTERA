@@ -6,6 +6,7 @@ import { AppLayout, type ActiveTab } from './components/layout/AppLayout';
 import { RealtimeSyncProvider } from './context/RealtimeSyncContext';
 import { useRealtimeSync } from './context/realtimeSyncStore';
 import { ForceChangePasswordModal, SkeletonDashboard } from './components/ui';
+import { INTRO_SEEN_KEY, PanteraIntroSplash } from './components/common/PanteraIntroSplash';
 
 // Halaman Direktur
 import { DirekturBerandaPage } from './pages/direktur/DirekturBerandaPage';
@@ -185,6 +186,14 @@ function AuthenticatedShell({
 
 export default function App() {
   const queryClient = useQueryClient();
+  const [showIntro, setShowIntro] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return window.sessionStorage.getItem(INTRO_SEEN_KEY) !== '1';
+    } catch {
+      return false;
+    }
+  });
   const [user, setUser] = useState<User | null>(() => authService.getCurrentUser());
   const [checkingSession, setCheckingSession] = useState(() => authService.isAuthenticated());
   const [currentTab, setCurrentTab] = useState<ActiveTab>(() => {
@@ -297,29 +306,31 @@ export default function App() {
     });
   };
 
-  if (checkingSession && !user) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC] p-6 sm:p-10">
-        <div className="mx-auto max-w-6xl">
-          <SkeletonDashboard />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <RealtimeSyncProvider enabled={Boolean(user)} activeTab={user ? (currentTab as NotificationModule) : null}>
-      {user ? (
-        <AuthenticatedShell
-          user={user}
-          currentTab={currentTab}
-          onSelectTab={handleSelectTab}
-          onUserUpdated={(updated) => setUser(updated)}
-          onLogout={handleLogout}
-        />
+    <>
+      {showIntro && <PanteraIntroSplash onComplete={() => setShowIntro(false)} />}
+
+      {checkingSession && !user ? (
+        <div className="min-h-screen bg-[#F8FAFC] p-6 sm:p-10">
+          <div className="mx-auto max-w-6xl">
+            <SkeletonDashboard />
+          </div>
+        </div>
       ) : (
-        <LoginPage onLoginSuccess={handleLoginSuccess} />
+        <RealtimeSyncProvider enabled={Boolean(user)} activeTab={user ? (currentTab as NotificationModule) : null}>
+          {user ? (
+            <AuthenticatedShell
+              user={user}
+              currentTab={currentTab}
+              onSelectTab={handleSelectTab}
+              onUserUpdated={(updated) => setUser(updated)}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <LoginPage onLoginSuccess={handleLoginSuccess} />
+          )}
+        </RealtimeSyncProvider>
       )}
-    </RealtimeSyncProvider>
+    </>
   );
 }
